@@ -1,0 +1,52 @@
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+
+# Unity generated files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# IDE and editor files
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Crash reports
+sysinfo.txt
+
+# Build outputs and local tooling
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.exe
+*.pdb
+*.pidb.meta
+*.mdb
+
+# Addressables / streaming assets generated data
+[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*
+
+# User-specific test and profiling data
+[Aa]ssets/[Tt]est[Rr]esults/
+[Aa]ssets/[Ss]treaming[Aa]ssets/[Aa]uto[Ll]oad[Tt]est[Ff]iles/
