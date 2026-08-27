@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff30ca59b1e5bf74eb34faa3006a4a04, type: 3}
+  m_Name: CameraMotionProfile_Prototype
+  m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.CameraMotionProfile
+  idlePositionAmplitude: {x: 0.045, y: 0, z: 0.022}
+  idleRotationAmplitude: {x: 0, y: 0, z: 0}
+  idleFrequency: 0.28
+  grooveSwayMultiplier: 1.8
+  grooveBlendDuration: 0.7
+  transformDamping: 0.14
+  notePulseFov: 0
+  notePulseDuration: 0.16
+  grooveDanceInterval: 2.4
+  grooveDanceDuration: 0.85
+  grooveDancePosition: 0.045
+  grooveDanceRotation: 0.7
+  grooveDanceFov: 0
+  grooveAnticipationRatio: 0.16
+  grooveArcDepth: 0.55
+  followThroughDelay: 0.08
+  failRotationAmplitude: {x: 0.35, y: 0.45, z: 0.8}
+  failShakeDuration: 0.28
+  failShakeFrequency: 18
+  bassFadeInDuration: 0.45
+  bassHoldDuration: 0.35
+  fullSongCrossfadeDuration: 0.8
+  introPushInFovOffset: -2.5
+  celebrationBpm: 130
+  fullGrooveDuration: 4.5
+  fullGrooveFadeInDuration: 0.6
+  fullGrooveFadeOutDuration: 0.65
+  fullGrooveFovAmplitude: 3.2
+  fullGroovePositionAmplitude: 0.04
+  fullGrooveRotationAmplitude: 0.9
+  winPanelDelay: 0.2
+  zoomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
