@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 069356c4194b8ba49923458be117af7b, type: 3}
+  m_Name: StageReactionProfile_Prototype
+  m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.StageReactionProfile
+  transitionSmoothTime: 0.16
+  beatPulseDuration: 0.2
+  rowPulseDuration: 0.35
+  failurePulseDuration: 0.45
+  audienceBobHeight: 0.08
+  audienceSwayAngle: 10
+  audienceDanceSpeed: 4.5
+  spotlightFadeDuration: 0.35
+  spotlightIntensity: 8
+  spotlightRange: 14
+  spotlightOuterAngle: 32
+  spotlightInnerAngle: 18
+  spotlightPanAmplitude: 24
+  spotlightTiltAmplitude: 12
+  spotlightMovementSpeed: 0.85
+  spotlightColorCycleDuration: 1.2
+  spotlightColors:
+  - {r: 1, g: 0.05, b: 0.35, a: 1}
+  - {r: 1, g: 0.65, b: 0.05, a: 1}
+  - {r: 0.05, g: 0.25, b: 1, a: 1}
+  baselineBloom: 0.15
+  fullGrooveBloom: 0.65
+  rgbFilterIntensity: 0.38
+  rgbFilterFrequency: 3.2
+  rgbFilterFadeDuration: 0.15
+  rgbFilterColors:
+  - {r: 1, g: 0.52, b: 0.52, a: 1}
+  - {r: 0.52, g: 1, b: 0.58, a: 1}
+  - {r: 0.52, g: 0.62, b: 1, a: 1}

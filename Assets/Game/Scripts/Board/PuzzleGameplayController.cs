@@ -58,6 +58,7 @@ namespace GameJam.Gameplay
             }
 
             progressTracker = new ObjectiveProgressTracker(level.ObjectiveRows);
+            failFeedbackDuration = level.FailFeedbackDuration;
             currentCoordinate = level.PlayerStart;
             completionPublished = false;
             hasBufferedDirection = false;
@@ -122,6 +123,7 @@ namespace GameJam.Gameplay
             }
 
             State = GameplayState.Moving;
+            gameplayEvents.PublishPlayerMoveStarted(direction);
             StartCoroutine(MoveAndResolve(targetCoordinate, targetTile));
             return true;
         }

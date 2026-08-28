@@ -82,22 +82,22 @@ namespace GameJam.Gameplay.Tests
             var tracker = CreateTracker();
             var colors = new Dictionary<Vector2Int, BeatColor>
             {
-                [new Vector2Int(1, 1)] = BeatColor.Yellow,
-                [new Vector2Int(2, 1)] = BeatColor.Yellow,
-                [new Vector2Int(3, 1)] = BeatColor.Blue,
-                [new Vector2Int(1, 2)] = BeatColor.Yellow,
-                [new Vector2Int(2, 2)] = BeatColor.Magenta,
+                [new Vector2Int(2, 2)] = BeatColor.Yellow,
                 [new Vector2Int(3, 2)] = BeatColor.Yellow,
-                [new Vector2Int(1, 3)] = BeatColor.Blue,
-                [new Vector2Int(2, 3)] = BeatColor.Magenta,
-                [new Vector2Int(3, 3)] = BeatColor.Magenta
+                [new Vector2Int(4, 2)] = BeatColor.Blue,
+                [new Vector2Int(2, 3)] = BeatColor.Yellow,
+                [new Vector2Int(3, 3)] = BeatColor.Magenta,
+                [new Vector2Int(4, 3)] = BeatColor.Yellow,
+                [new Vector2Int(2, 4)] = BeatColor.Blue,
+                [new Vector2Int(3, 4)] = BeatColor.Magenta,
+                [new Vector2Int(4, 4)] = BeatColor.Magenta
             };
             var directions = new[]
             {
                 Vector2Int.down, Vector2Int.right, Vector2Int.up, Vector2Int.up,
                 Vector2Int.left, Vector2Int.left, Vector2Int.down, Vector2Int.right
             };
-            var coordinate = new Vector2Int(2, 2);
+            var coordinate = new Vector2Int(3, 3);
 
             foreach (var direction in directions)
             {

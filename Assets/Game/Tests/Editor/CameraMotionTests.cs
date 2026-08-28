@@ -15,6 +15,9 @@ namespace GameJam.Gameplay.Tests
                 Assert.That(profile.EvaluateZoom(1f), Is.EqualTo(1f).Within(0.001f));
                 Assert.That(profile.CelebrationBpm, Is.GreaterThan(0f));
                 Assert.That(profile.FullGrooveDuration, Is.GreaterThan(1f));
+                Assert.That(profile.TileMoveZoomFov, Is.InRange(0.1f, 2f));
+                Assert.That(profile.TileMoveZoomDuration, Is.InRange(0.05f, 0.3f));
+                Assert.That(profile.TileMoveZoomInRatio, Is.InRange(0.2f, 0.7f));
             }
             finally
             {
@@ -35,6 +38,26 @@ namespace GameJam.Gameplay.Tests
                 Assert.That(invocationCount, Is.Zero);
                 eventHub.PublishWinPresentationReady();
                 Assert.That(invocationCount, Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventObject);
+            }
+        }
+
+        [Test]
+        public void PlayerMoveStartedEvent_PublishesOrthogonalDirection()
+        {
+            var eventObject = new GameObject("Events");
+            try
+            {
+                var eventHub = eventObject.AddComponent<PuzzleGameplayEvents>();
+                var received = Vector2Int.zero;
+                eventHub.PlayerMoveStarted += direction => received = direction;
+
+                eventHub.PublishPlayerMoveStarted(Vector2Int.left);
+
+                Assert.That(received, Is.EqualTo(Vector2Int.left));
             }
             finally
             {

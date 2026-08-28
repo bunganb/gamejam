@@ -50,9 +50,10 @@ namespace GameJam.Gameplay.Tests
 
             Assert.That(board.ActiveTileCount, Is.EqualTo(9));
             Assert.That(board.GetActiveBounds().size, Is.EqualTo(new Vector3Int(3, 3, 1)));
-            Assert.That(board.IsCellActive(new Vector2Int(2, 2)), Is.True);
+            Assert.That(board.IsCellActive(new Vector2Int(3, 3)), Is.True);
             Assert.That(board.IsCellActive(new Vector2Int(0, 0)), Is.False);
-            Assert.That(board.TryGetTile(new Vector2Int(6, 6), out _), Is.False);
+            Assert.That(board.TryGetTile(new Vector2Int(7, 7), out _), Is.False);
+            Assert.That(board.transform.Find("Content").localPosition, Is.EqualTo(Vector3.zero));
         }
 
         [Test]
@@ -61,7 +62,7 @@ namespace GameJam.Gameplay.Tests
             var level = CreatePrototypeLevel(true);
             var board = CreateBoard();
             board.BuildBoard(level);
-            Assert.That(board.TryGetTile(new Vector2Int(2, 2), out var center), Is.True);
+            Assert.That(board.TryGetTile(new Vector2Int(3, 3), out var center), Is.True);
             center.SetColor(BeatColor.Blue);
 
             board.ResetBoard();
@@ -92,19 +93,19 @@ namespace GameJam.Gameplay.Tests
                 cells[index] = new BoardCellDefinition(false, BeatColor.Magenta);
             }
 
-            for (var row = 1; row <= 3; row++)
+            for (var row = 2; row <= 4; row++)
             {
-                for (var column = 1; column <= 3; column++)
+                for (var column = 2; column <= 4; column++)
                 {
                     var coordinate = new Vector2Int(column, row);
-                    var isStart = coordinate == new Vector2Int(2, 2);
+                    var isStart = coordinate == new Vector2Int(3, 3);
                     cells[LevelDefinition.ToIndex(coordinate)] = new BoardCellDefinition(!isStart || activeStart, BeatColor.Magenta);
                 }
             }
 
             level.SetData(
                 cells,
-                new Vector2Int(2, 2),
+                new Vector2Int(3, 3),
                 new[] { new ObjectiveRowDefinition(BeatColor.Magenta) });
             return level;
         }

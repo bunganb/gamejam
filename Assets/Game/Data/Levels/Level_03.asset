@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b0b71f7fe5b13284bbc0963fb68a5013, type: 3}
-  m_Name: Level_01_Prototype
+  m_Name: Level_03
   m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.LevelDefinition
-  levelId: Level_01
+  levelId: Level_03
   cells:
   - isActive: 0
     initialColor: 0
@@ -44,12 +44,28 @@ MonoBehaviour:
     initialColor: 0
   - isActive: 0
     initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 0
+    initialColor: 0
   - isActive: 0
     initialColor: 0
   - isActive: 1
-    initialColor: 2
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
   - isActive: 1
     initialColor: 2
+  - isActive: 1
+    initialColor: 0
   - isActive: 1
     initialColor: 1
   - isActive: 0
@@ -58,26 +74,6 @@ MonoBehaviour:
     initialColor: 0
   - isActive: 0
     initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 1
-    initialColor: 2
-  - isActive: 1
-    initialColor: 0
-  - isActive: 1
-    initialColor: 2
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 1
-    initialColor: 1
-  - isActive: 1
-    initialColor: 0
   - isActive: 1
     initialColor: 0
   - isActive: 0
@@ -112,13 +108,18 @@ MonoBehaviour:
     initialColor: 0
   - isActive: 0
     initialColor: 0
-  playerStart: {x: 3, y: 3}
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  playerStart: {x: 1, y: 3}
   objectiveRows:
+  - notes: 0200000000000000
+  - notes: 01000000
   - notes: 00000000
   - notes: 02000000
-  - notes: 00000000
+  - notes: 0100000000000000
   - notes: 01000000
-  - notes: 01000000020000000000000001000000
-  expectedSolution: 0100000003000000000000000000000002000000020000000100000003000000
+  expectedSolution: 0100000003000000030000000000000002000000000000000100000002000000
   failFeedbackDuration: 0.75
   completionHoldDuration: 2.5

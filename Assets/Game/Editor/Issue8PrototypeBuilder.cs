@@ -180,10 +180,11 @@ namespace GameJam.Editor
                     {
                         var tile = (GameObject)PrefabUtility.InstantiatePrefab(tilePrefab, rowRoot);
                         tile.name = $"Tile_{row:00}_{column:00}";
+                        var boardCenter = (LevelDefinition.GridWidth - 1) * 0.5f;
                         tile.transform.localPosition = new Vector3(
-                            (column - 2.5f) * GridSpacing,
+                            (column - boardCenter) * GridSpacing,
                             0f,
-                            (2.5f - row) * GridSpacing);
+                            (boardCenter - row) * GridSpacing);
 
                         var tileSlot = tile.GetComponent<TileSlot>();
                         tileSlot.ConfigureReferences(
@@ -257,7 +258,7 @@ namespace GameJam.Editor
             {
                 for (var localColumn = 0; localColumn < 3; localColumn++)
                 {
-                    var coordinate = new Vector2Int(localColumn + 1, localRow + 1);
+                    var coordinate = new Vector2Int(localColumn + 2, localRow + 2);
                     cells[LevelDefinition.ToIndex(coordinate)] = new BoardCellDefinition(true, layout[localRow, localColumn]);
                 }
             }
@@ -270,7 +271,7 @@ namespace GameJam.Editor
                 new ObjectiveRowDefinition(BeatColor.Blue),
                 new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue)
             };
-            level.SetData(cells, new Vector2Int(2, 2), objectives);
+            level.SetData(cells, new Vector2Int(3, 3), objectives);
             EditorUtility.SetDirty(level);
             return level;
         }
@@ -330,6 +331,7 @@ namespace GameJam.Editor
             CreateReactionAnchors(environment.transform);
             CreateLighting(lighting.transform);
             CreateCamera(cameraRig.transform, eventHub, cameraMotionProfile);
+            Issue11StageReactionInstaller.InstallIntoLoadedScene(scene);
 
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene, ScenePath))

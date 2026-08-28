@@ -34,6 +34,10 @@ namespace GameJam.Gameplay
         private Vector3 ambientRotationVelocity;
         private float ambientFovOffset;
         private float ambientFovVelocity;
+        private float tileMoveFovOffset;
+        private float tileMovePulseStartFov;
+        private float tileMovePulseElapsed;
+        private bool tileMovePulseActive;
         private float noiseSeed;
         private Coroutine reactionRoutine;
         private Coroutine notePulseRoutine;
@@ -126,11 +130,16 @@ namespace GameJam.Gameplay
                 Mathf.Infinity,
                 Time.unscaledDeltaTime);
 
+            EvaluateTileMoveZoom(Time.unscaledDeltaTime);
+
             transform.localPosition = baseLocalPosition +
                                       ambientPositionOffset + reactionPositionOffset;
             transform.localRotation = baseLocalRotation * Quaternion.Euler(
                 ambientRotationOffset + reactionRotationOffset);
-            targetCamera.fieldOfView = Mathf.Clamp(baseFieldOfView + ambientFovOffset + reactionFovOffset, 25f, 80f);
+            targetCamera.fieldOfView = Mathf.Clamp(
+                baseFieldOfView + ambientFovOffset + tileMoveFovOffset + reactionFovOffset,
+                25f,
+                80f);
         }
 
         public void RestoreImmediately()
@@ -145,6 +154,10 @@ namespace GameJam.Gameplay
             ambientRotationVelocity = Vector3.zero;
             ambientFovOffset = 0f;
             ambientFovVelocity = 0f;
+            tileMoveFovOffset = 0f;
+            tileMovePulseStartFov = 0f;
+            tileMovePulseElapsed = 0f;
+            tileMovePulseActive = false;
             State = CameraMotionState.Idle;
             reactionPositionOffset = Vector3.zero;
             reactionRotationOffset = Vector3.zero;
@@ -184,6 +197,7 @@ namespace GameJam.Gameplay
             }
 
             Unsubscribe();
+            gameplayEvents.PlayerMoveStarted += HandlePlayerMoveStarted;
             gameplayEvents.ChainAdvanced += HandleChainAdvanced;
             gameplayEvents.ChainFailed += HandleChainFailed;
             gameplayEvents.ChainReset += HandleChainReset;
@@ -197,10 +211,56 @@ namespace GameJam.Gameplay
                 return;
             }
 
+            gameplayEvents.PlayerMoveStarted -= HandlePlayerMoveStarted;
             gameplayEvents.ChainAdvanced -= HandleChainAdvanced;
             gameplayEvents.ChainFailed -= HandleChainFailed;
             gameplayEvents.ChainReset -= HandleChainReset;
             gameplayEvents.ChainCompleted -= HandleChainCompleted;
+        }
+
+        private void HandlePlayerMoveStarted(Vector2Int direction)
+        {
+            if (profile == null || direction.sqrMagnitude == 0)
+            {
+                return;
+            }
+
+            // Preserve current value when retriggered so rapid moves cannot snap FOV.
+            tileMovePulseStartFov = tileMoveFovOffset;
+            tileMovePulseElapsed = 0f;
+            tileMovePulseActive = profile.TileMoveZoomFov > 0f;
+        }
+
+        private void EvaluateTileMoveZoom(float deltaTime)
+        {
+            if (!tileMovePulseActive || profile == null)
+            {
+                return;
+            }
+
+            tileMovePulseElapsed += deltaTime;
+            var duration = Mathf.Max(0.05f, profile.TileMoveZoomDuration);
+            var normalized = Mathf.Clamp01(tileMovePulseElapsed / duration);
+            var zoomInRatio = Mathf.Clamp(profile.TileMoveZoomInRatio, 0.2f, 0.7f);
+            var peakFov = -profile.TileMoveZoomFov;
+
+            if (normalized < zoomInRatio)
+            {
+                var zoomIn = CameraAnimationPrinciples.SmootherStep(normalized / zoomInRatio);
+                tileMoveFovOffset = Mathf.Lerp(tileMovePulseStartFov, peakFov, zoomIn);
+            }
+            else
+            {
+                var zoomOut = CameraAnimationPrinciples.SmootherStep(
+                    (normalized - zoomInRatio) / (1f - zoomInRatio));
+                tileMoveFovOffset = Mathf.Lerp(peakFov, 0f, zoomOut);
+            }
+
+            if (normalized >= 1f)
+            {
+                tileMoveFovOffset = 0f;
+                tileMovePulseActive = false;
+            }
         }
 
         private void HandleChainAdvanced(GameplayProgressSnapshot snapshot)
