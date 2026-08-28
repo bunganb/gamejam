@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -13,18 +14,34 @@ namespace GameJam.Gameplay
         [SerializeField] private AudioSource ketipungTwoSource;
         [SerializeField] private AudioSource bassSource;
         [SerializeField] private AudioSource fullSongSource;
+        [SerializeField] private LevelLoader levelLoader;
+        [SerializeField] private LevelMusicDefinition[] musicProfiles = Array.Empty<LevelMusicDefinition>();
+        [SerializeField, Min(0)] private int sampleSequencerLevelIndex;
         [SerializeField, Min(0f)] private float layerFadeDuration = 0.12f;
         [SerializeField, Min(0f)] private float bassFadeInDuration = 0.45f;
+        [SerializeField, Range(0f, 1f)] private float earlyBassProgress = 0.80f;
+        [SerializeField, Min(0f)] private float earlyBassFadeInDuration = 0.75f;
         [SerializeField, Min(0f)] private float bassHoldDuration = 0.35f;
-        [SerializeField, Min(0f)] private float fullSongCrossfadeDuration = 0.8f;
+        [SerializeField, Min(0f)] private float fullSongCrossfadeDuration = 1.15f;
         [SerializeField, Range(40f, 220f)] private float bpm = 130f;
         [SerializeField, Range(1, 4)] private int subdivisionsPerBeat = 2;
         [SerializeField, Min(0f)] private float quantizationLeadTime = 0.01f;
 
         private readonly bool[] unlockedBeatLayers = new bool[3];
+        private bool progressiveStemLayersEnabled = true;
+        private bool bassUnlocked;
+        private bool secondaryLayerUnlocked;
+        private bool topLoopUnlocked;
         private Coroutine transitionRoutine;
         private bool timelineStarted;
         private double timelineStartDspTime;
+        private LevelMusicDefinition activeProfile;
+
+        public bool TimelineStarted => timelineStarted;
+        public double TimelineStartDspTime => timelineStartDspTime;
+        public float BeatsPerMinute => bpm;
+        public event Action FullSongActivated;
+        public event Action<float> FullSongTransitionStarted;
 
         public void ConfigureReferences(
             PuzzleGameplayEvents eventHub,
@@ -44,9 +61,42 @@ namespace GameJam.Gameplay
             fullSongSource = fullSong;
         }
 
+        public void ConfigureSampleSequencerScope(LevelLoader loader, int enabledLevelIndex = 0)
+        {
+            UnsubscribeFromLevelLoader();
+            levelLoader = loader;
+            sampleSequencerLevelIndex = Mathf.Max(0, enabledLevelIndex);
+            progressiveStemLayersEnabled = levelLoader != null && levelLoader.CurrentLevelIndex >= 0 &&
+                                           levelLoader.CurrentLevelIndex != sampleSequencerLevelIndex;
+            SubscribeToLevelLoader();
+        }
+
+        public void ConfigureFullSongTransition(
+            float bassProgress,
+            float bassFadeDuration,
+            float crossfadeDuration)
+        {
+            earlyBassProgress = Mathf.Clamp01(bassProgress);
+            earlyBassFadeInDuration = Mathf.Max(0f, bassFadeDuration);
+            fullSongCrossfadeDuration = Mathf.Max(0f, crossfadeDuration);
+        }
+
+        public void ConfigureMusicCatalog(LevelLoader loader, LevelMusicDefinition[] profiles)
+        {
+            UnsubscribeFromLevelLoader();
+            levelLoader = loader;
+            musicProfiles = profiles != null ? (LevelMusicDefinition[])profiles.Clone() : Array.Empty<LevelMusicDefinition>();
+            var initialIndex = levelLoader != null && levelLoader.CurrentLevelIndex >= 0
+                ? levelLoader.CurrentLevelIndex
+                : 0;
+            ApplyMusicProfile(initialIndex);
+            SubscribeToLevelLoader();
+        }
+
         private void OnEnable()
         {
             Subscribe();
+            SubscribeToLevelLoader();
         }
 
         private void Start()
@@ -57,6 +107,7 @@ namespace GameJam.Gameplay
         private void OnDisable()
         {
             Unsubscribe();
+            UnsubscribeFromLevelLoader();
         }
 
         private void Subscribe()
@@ -69,9 +120,11 @@ namespace GameJam.Gameplay
             gameplayEvents.ChainAdvanced -= HandleChainAdvanced;
             gameplayEvents.ChainReset -= HandleChainReset;
             gameplayEvents.ChainCompleted -= HandleChainCompleted;
+            gameplayEvents.ObjectiveRowCompleted -= HandleObjectiveRowCompleted;
             gameplayEvents.ChainAdvanced += HandleChainAdvanced;
             gameplayEvents.ChainReset += HandleChainReset;
             gameplayEvents.ChainCompleted += HandleChainCompleted;
+            gameplayEvents.ObjectiveRowCompleted += HandleObjectiveRowCompleted;
         }
 
         private void Unsubscribe()
@@ -84,6 +137,7 @@ namespace GameJam.Gameplay
             gameplayEvents.ChainAdvanced -= HandleChainAdvanced;
             gameplayEvents.ChainReset -= HandleChainReset;
             gameplayEvents.ChainCompleted -= HandleChainCompleted;
+            gameplayEvents.ObjectiveRowCompleted -= HandleObjectiveRowCompleted;
         }
 
         private void StartSynchronizedTimeline()
@@ -102,16 +156,50 @@ namespace GameJam.Gameplay
             ConfigureSource(fullSongSource, 0f);
 
             timelineStartDspTime = AudioSettings.dspTime + 0.2d;
-            harmonySource.PlayScheduled(timelineStartDspTime);
-            drumKickSource.PlayScheduled(timelineStartDspTime);
-            ketipungOneSource.PlayScheduled(timelineStartDspTime);
-            ketipungTwoSource.PlayScheduled(timelineStartDspTime);
-            bassSource.PlayScheduled(timelineStartDspTime);
-            fullSongSource.PlayScheduled(timelineStartDspTime);
+            PlayScheduled(harmonySource, timelineStartDspTime);
+            PlayScheduled(drumKickSource, timelineStartDspTime);
+            PlayScheduled(ketipungOneSource, timelineStartDspTime);
+            PlayScheduled(ketipungTwoSource, timelineStartDspTime);
+            PlayScheduled(bassSource, timelineStartDspTime);
+            PlayScheduled(fullSongSource, timelineStartDspTime);
         }
 
         private void HandleChainAdvanced(GameplayProgressSnapshot snapshot)
         {
+            if (activeProfile != null)
+            {
+                if (!secondaryLayerUnlocked && activeProfile.SecondaryLayer != null &&
+                    snapshot.NormalizedProgress >= activeProfile.SecondaryLayerThreshold)
+                {
+                    secondaryLayerUnlocked = true;
+                    StartCoroutine(FadeSourceOnNextGrid(drumKickSource, earlyBassFadeInDuration));
+                }
+
+                if (!bassUnlocked && activeProfile.BuildLayer != null &&
+                    snapshot.NormalizedProgress >= activeProfile.BuildLayerThreshold)
+                {
+                    bassUnlocked = true;
+                    StartCoroutine(FadeSourceOnNextGrid(bassSource, earlyBassFadeInDuration));
+                }
+
+                return;
+            }
+
+            if (!progressiveStemLayersEnabled)
+            {
+                if (ShouldUnlockBassEarly(
+                        snapshot.NormalizedProgress,
+                        earlyBassProgress,
+                        progressiveStemLayersEnabled,
+                        bassUnlocked))
+                {
+                    bassUnlocked = true;
+                    StartCoroutine(FadeSourceOnNextGrid(bassSource, earlyBassFadeInDuration));
+                }
+
+                return;
+            }
+
             var layerIndex = GetLayerIndex(snapshot.ActualColor);
             if (unlockedBeatLayers[layerIndex])
             {
@@ -120,6 +208,16 @@ namespace GameJam.Gameplay
 
             unlockedBeatLayers[layerIndex] = true;
             StartCoroutine(FadeSourceOnNextGrid(GetBeatSource(layerIndex)));
+        }
+
+        public static bool ShouldUnlockBassEarly(
+            float normalizedProgress,
+            float unlockThreshold,
+            bool progressiveLayersEnabled,
+            bool alreadyUnlocked)
+        {
+            return !progressiveLayersEnabled && !alreadyUnlocked &&
+                   normalizedProgress >= Mathf.Clamp01(unlockThreshold);
         }
 
         private void HandleChainReset()
@@ -136,12 +234,28 @@ namespace GameJam.Gameplay
                 unlockedBeatLayers[index] = false;
             }
 
-            harmonySource.volume = 1f;
-            drumKickSource.volume = 0f;
-            ketipungOneSource.volume = 0f;
-            ketipungTwoSource.volume = 0f;
-            bassSource.volume = 0f;
-            fullSongSource.volume = 0f;
+            bassUnlocked = false;
+            secondaryLayerUnlocked = false;
+            topLoopUnlocked = false;
+
+            SetVolume(harmonySource, 1f);
+            SetVolume(drumKickSource, 0f);
+            SetVolume(ketipungOneSource, 0f);
+            SetVolume(ketipungTwoSource, 0f);
+            SetVolume(bassSource, 0f);
+            SetVolume(fullSongSource, 0f);
+        }
+
+        private void HandleObjectiveRowCompleted(GameplayProgressSnapshot snapshot)
+        {
+            if (activeProfile == null || topLoopUnlocked || activeProfile.TopLoopLayer == null ||
+                snapshot.ObjectiveRowIndex != activeProfile.TopLoopUnlockRow)
+            {
+                return;
+            }
+
+            topLoopUnlocked = true;
+            StartCoroutine(FadeSourceOnNextGrid(ketipungOneSource, earlyBassFadeInDuration));
         }
 
         private void HandleChainCompleted(GameplayProgressSnapshot snapshot)
@@ -155,42 +269,52 @@ namespace GameJam.Gameplay
         private IEnumerator TransitionToFullSong()
         {
             yield return WaitForNextQuantizedStep();
-            yield return FadeSource(bassSource, 1f, bassFadeInDuration);
-
-            if (bassHoldDuration > 0f)
+            if (!bassUnlocked && bassSource != null && bassSource.clip != null)
             {
-                yield return new WaitForSecondsRealtime(bassHoldDuration);
+                bassUnlocked = true;
+                yield return FadeSource(bassSource, 1f, bassFadeInDuration);
+                if (bassHoldDuration > 0f)
+                {
+                    yield return new WaitForSecondsRealtime(bassHoldDuration);
+                }
             }
 
             var elapsed = 0f;
-            var harmonyStart = harmonySource.volume;
-            var kickStart = drumKickSource.volume;
-            var ketipungOneStart = ketipungOneSource.volume;
-            var ketipungTwoStart = ketipungTwoSource.volume;
-            var bassStart = bassSource.volume;
-            var fullSongStart = fullSongSource.volume;
+            var harmonyStart = GetVolume(harmonySource);
+            var kickStart = GetVolume(drumKickSource);
+            var ketipungOneStart = GetVolume(ketipungOneSource);
+            var ketipungTwoStart = GetVolume(ketipungTwoSource);
+            var bassStart = GetVolume(bassSource);
+            var fullSongStart = GetVolume(fullSongSource);
             var duration = Mathf.Max(0.0001f, fullSongCrossfadeDuration);
+            FullSongTransitionStarted?.Invoke(duration);
 
             while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                var normalized = Mathf.Clamp01(elapsed / duration);
-                harmonySource.volume = Mathf.Lerp(harmonyStart, 0f, normalized);
-                drumKickSource.volume = Mathf.Lerp(kickStart, 0f, normalized);
-                ketipungOneSource.volume = Mathf.Lerp(ketipungOneStart, 0f, normalized);
-                ketipungTwoSource.volume = Mathf.Lerp(ketipungTwoStart, 0f, normalized);
-                bassSource.volume = Mathf.Lerp(bassStart, 0f, normalized);
-                fullSongSource.volume = Mathf.Lerp(fullSongStart, 1f, normalized);
+                var normalized = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+                SetVolume(harmonySource, Mathf.Lerp(harmonyStart, 0f, normalized));
+                SetVolume(drumKickSource, Mathf.Lerp(kickStart, 0f, normalized));
+                SetVolume(ketipungOneSource, Mathf.Lerp(ketipungOneStart, 0f, normalized));
+                SetVolume(ketipungTwoSource, Mathf.Lerp(ketipungTwoStart, 0f, normalized));
+                SetVolume(bassSource, Mathf.Lerp(bassStart, 0f, normalized));
+                SetVolume(fullSongSource, Mathf.Lerp(fullSongStart, 1f, normalized));
                 yield return null;
             }
 
+            FullSongActivated?.Invoke();
             transitionRoutine = null;
         }
 
         private IEnumerator FadeSourceOnNextGrid(AudioSource source)
         {
+            yield return FadeSourceOnNextGrid(source, layerFadeDuration);
+        }
+
+        private IEnumerator FadeSourceOnNextGrid(AudioSource source, float duration)
+        {
             yield return WaitForNextQuantizedStep();
-            yield return FadeSource(source, 1f, layerFadeDuration);
+            yield return FadeSource(source, 1f, duration);
         }
 
         private IEnumerator WaitForNextQuantizedStep()
@@ -240,6 +364,11 @@ namespace GameJam.Gameplay
 
         private static IEnumerator FadeSource(AudioSource source, float targetVolume, float duration)
         {
+            if (source == null || source.clip == null)
+            {
+                yield break;
+            }
+
             var startVolume = source.volume;
             if (duration <= 0f)
             {
@@ -261,14 +390,10 @@ namespace GameJam.Gameplay
         private bool AllSourcesReady()
         {
             var ready = harmonySource != null && harmonySource.clip != null &&
-                        drumKickSource != null && drumKickSource.clip != null &&
-                        ketipungOneSource != null && ketipungOneSource.clip != null &&
-                        ketipungTwoSource != null && ketipungTwoSource.clip != null &&
-                        bassSource != null && bassSource.clip != null &&
                         fullSongSource != null && fullSongSource.clip != null;
             if (!ready)
             {
-                Debug.LogError("PrototypeMusicDirector requires all six audio clips and sources.", this);
+                Debug.LogError("PrototypeMusicDirector requires base harmony and full-song clips.", this);
             }
 
             return ready;
@@ -276,6 +401,11 @@ namespace GameJam.Gameplay
 
         private static void ConfigureSource(AudioSource source, float volume)
         {
+            if (source == null || source.clip == null)
+            {
+                return;
+            }
+
             if (source.clip.loadState == AudioDataLoadState.Unloaded)
             {
                 source.clip.LoadAudioData();
@@ -295,6 +425,101 @@ namespace GameJam.Gameplay
                 1 => ketipungOneSource,
                 _ => ketipungTwoSource
             };
+        }
+
+        private void SubscribeToLevelLoader()
+        {
+            if (levelLoader == null)
+            {
+                return;
+            }
+
+            levelLoader.LevelChanged -= HandleLevelChanged;
+            levelLoader.LevelChanged += HandleLevelChanged;
+        }
+
+        private void UnsubscribeFromLevelLoader()
+        {
+            if (levelLoader != null)
+            {
+                levelLoader.LevelChanged -= HandleLevelChanged;
+            }
+        }
+
+        private void HandleLevelChanged(int levelIndex, LevelDefinition level)
+        {
+            if (musicProfiles != null && musicProfiles.Length > 0)
+            {
+                ApplyMusicProfile(levelIndex);
+                RestartSynchronizedTimeline();
+                return;
+            }
+
+            progressiveStemLayersEnabled = levelIndex != sampleSequencerLevelIndex;
+        }
+
+        private void ApplyMusicProfile(int levelIndex)
+        {
+            activeProfile = musicProfiles != null && levelIndex >= 0 && levelIndex < musicProfiles.Length
+                ? musicProfiles[levelIndex]
+                : null;
+            if (activeProfile == null)
+            {
+                return;
+            }
+
+            bpm = activeProfile.Bpm;
+            subdivisionsPerBeat = activeProfile.SubdivisionsPerBeat;
+            progressiveStemLayersEnabled = false;
+            harmonySource.clip = activeProfile.BaseHarmony;
+            drumKickSource.clip = activeProfile.SecondaryLayer;
+            ketipungOneSource.clip = activeProfile.TopLoopLayer;
+            ketipungTwoSource.clip = null;
+            bassSource.clip = activeProfile.BuildLayer;
+            fullSongSource.clip = activeProfile.FullSong;
+            secondaryLayerUnlocked = false;
+            topLoopUnlocked = false;
+            bassUnlocked = false;
+        }
+
+        private void RestartSynchronizedTimeline()
+        {
+            StopAllCoroutines();
+            transitionRoutine = null;
+            StopSource(harmonySource);
+            StopSource(drumKickSource);
+            StopSource(ketipungOneSource);
+            StopSource(ketipungTwoSource);
+            StopSource(bassSource);
+            StopSource(fullSongSource);
+            timelineStarted = false;
+            StartSynchronizedTimeline();
+        }
+
+        private static void PlayScheduled(AudioSource source, double dspTime)
+        {
+            if (source != null && source.clip != null)
+            {
+                source.PlayScheduled(dspTime);
+            }
+        }
+
+        private static void StopSource(AudioSource source)
+        {
+            source?.Stop();
+        }
+
+        private static float GetVolume(AudioSource source)
+        {
+            return source != null && source.clip != null ? source.volume : 0f;
+        }
+
+        private static void SetVolume(AudioSource source, float volume)
+        {
+            if (source != null && source.clip != null)
+            {
+                source.volume = volume;
+            }
         }
 
         private static int GetLayerIndex(BeatColor color)

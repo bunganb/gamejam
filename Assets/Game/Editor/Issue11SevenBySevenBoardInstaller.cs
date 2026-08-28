@@ -153,8 +153,8 @@ namespace GameJam.Editor
             var layout = new[,]
             {
                 { BeatColor.Yellow, BeatColor.Yellow, BeatColor.Blue },
-                { BeatColor.Yellow, BeatColor.Magenta, BeatColor.Yellow },
-                { BeatColor.Blue, BeatColor.Magenta, BeatColor.Magenta }
+                { BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue },
+                { BeatColor.Yellow, BeatColor.Blue, BeatColor.Blue }
             };
 
             for (var row = 0; row < 3; row++)
@@ -167,16 +167,23 @@ namespace GameJam.Editor
             }
 
             level.SetData(
+                "Level_01",
                 cells,
                 new Vector2Int(3, 3),
                 new[]
                 {
-                    new ObjectiveRowDefinition(BeatColor.Magenta),
-                    new ObjectiveRowDefinition(BeatColor.Yellow),
-                    new ObjectiveRowDefinition(BeatColor.Magenta),
-                    new ObjectiveRowDefinition(BeatColor.Blue),
-                    new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue)
-                });
+                    new ObjectiveRowDefinition(BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta),
+                    new ObjectiveRowDefinition(BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow),
+                    new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Blue, BeatColor.Blue)
+                },
+                new[]
+                {
+                    MoveDirection.Down, MoveDirection.Left, MoveDirection.Up, MoveDirection.Up,
+                    MoveDirection.Right, MoveDirection.Right, MoveDirection.Down, MoveDirection.Down,
+                    MoveDirection.Left, MoveDirection.Left, MoveDirection.Up
+                },
+                level.FailFeedbackDuration,
+                level.CompletionHoldDuration);
         }
 
         private static T FindComponent<T>(Scene scene) where T : Component

@@ -250,8 +250,8 @@ namespace GameJam.Editor
             var layout = new[,]
             {
                 { BeatColor.Yellow, BeatColor.Yellow, BeatColor.Blue },
-                { BeatColor.Yellow, BeatColor.Magenta, BeatColor.Yellow },
-                { BeatColor.Blue, BeatColor.Magenta, BeatColor.Magenta }
+                { BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue },
+                { BeatColor.Yellow, BeatColor.Blue, BeatColor.Blue }
             };
 
             for (var localRow = 0; localRow < 3; localRow++)
@@ -265,13 +265,21 @@ namespace GameJam.Editor
 
             var objectives = new[]
             {
-                new ObjectiveRowDefinition(BeatColor.Magenta),
-                new ObjectiveRowDefinition(BeatColor.Yellow),
-                new ObjectiveRowDefinition(BeatColor.Magenta),
-                new ObjectiveRowDefinition(BeatColor.Blue),
-                new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue)
+                new ObjectiveRowDefinition(BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta),
+                new ObjectiveRowDefinition(BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow),
+                new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Blue, BeatColor.Blue)
             };
-            level.SetData(cells, new Vector2Int(3, 3), objectives);
+            level.SetData(
+                "Level_01",
+                cells,
+                new Vector2Int(3, 3),
+                objectives,
+                new[]
+                {
+                    MoveDirection.Down, MoveDirection.Left, MoveDirection.Up, MoveDirection.Up,
+                    MoveDirection.Right, MoveDirection.Right, MoveDirection.Down, MoveDirection.Down,
+                    MoveDirection.Left, MoveDirection.Left, MoveDirection.Up
+                });
             EditorUtility.SetDirty(level);
             return level;
         }
@@ -345,25 +353,61 @@ namespace GameJam.Editor
         private static void CreatePrototypeMusic(Transform parent, PuzzleGameplayEvents eventHub)
         {
             var musicRoot = CreateChild(parent, "PrototypeMusic");
-            var harmony = CreateAudioLayer(musicRoot, "Harmony_01", "Assets/Game/Art/Beat/Prototype/1_Harmony.wav");
-            var drumKick = CreateAudioLayer(musicRoot, "DrumKick_02", "Assets/Game/Art/Beat/Prototype/2_DrumKick.wav");
-            var ketipungOne = CreateAudioLayer(musicRoot, "Ketipung1_03", "Assets/Game/Art/Beat/Prototype/3_Ketipung1.wav");
-            var ketipungTwo = CreateAudioLayer(musicRoot, "Ketipung2_04", "Assets/Game/Art/Beat/Prototype/4_Ketipung2.wav");
-            var bass = CreateAudioLayer(musicRoot, "BassGuitar_05", "Assets/Game/Art/Beat/Prototype/5_BassGuitar.wav");
-            var fullSong = CreateAudioLayer(musicRoot, "FullSong_06", "Assets/Game/Art/Beat/Prototype/6_FullSong.wav");
+            var harmony = CreateAudioLayer(musicRoot, "Harmony_01", "Assets/Game/Art/Beat/Level_1/1_Harmony.wav");
+            var drumKick = CreateAudioLayer(musicRoot, "DrumKick_02", "Assets/Game/Art/Beat/Level_1/2_DrumKick.wav");
+            var ketipungOne = CreateAudioLayer(musicRoot, "Ketipung1_03", "Assets/Game/Art/Beat/Level_1/3_Ketipung1.wav");
+            var ketipungTwo = CreateAudioLayer(musicRoot, "Ketipung2_04", "Assets/Game/Art/Beat/Level_1/4_Ketipung2.wav");
+            var bass = CreateAudioLayer(musicRoot, "BassGuitar_05", "Assets/Game/Art/Beat/Level_1/5_BassGuitar.wav");
+            var fullSong = CreateAudioLayer(musicRoot, "FullSong_06", "Assets/Game/Art/Beat/Level_1/6_FullSong.wav");
             var director = musicRoot.gameObject.AddComponent<PrototypeMusicDirector>();
             director.ConfigureReferences(eventHub, harmony, drumKick, ketipungOne, ketipungTwo, bass, fullSong);
+            director.ConfigureSampleSequencerScope(null, 0);
+            director.ConfigureFullSongTransition(0.80f, 0.75f, 1.15f);
+            var sequencer = musicRoot.gameObject.AddComponent<TileBeatSequencer>();
+            sequencer.ConfigureReferences(
+                eventHub,
+                director,
+                null,
+                RequireAudioClip("Assets/Game/Art/Beat/OneShots/Magenta_Kick.wav"),
+                RequireAudioClip("Assets/Game/Art/Beat/OneShots/Yellow_Ketipung1.wav"),
+                RequireAudioClip("Assets/Game/Art/Beat/OneShots/Yellow_Ketipung1_Accent.wav"),
+                RequireAudioClip("Assets/Game/Art/Beat/OneShots/Blue_Ketipung2.wav"),
+                RequireAudioClip("Assets/Game/Art/Beat/OneShots/Blue_Ketipung2_Accent.wav"),
+                0);
+            sequencer.ConfigurePattern(
+                8,
+                2,
+                new[] { 0, 3, 5, 6, 1, 3, 5, 7, 2, 4, 6 },
+                new[] { false, false, false, false, false, false, false, true, false, true, true });
+            sequencer.ConfigureTileBeatTransition(0.06f);
         }
 
         private static AudioSource CreateAudioLayer(Transform parent, string name, string clipPath)
         {
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+            if (clip == null)
+            {
+                throw new InvalidOperationException($"Required audio clip was not found at {clipPath}.");
+            }
+
             var layer = CreateChild(parent, name);
             var source = layer.gameObject.AddComponent<AudioSource>();
-            source.clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+            source.clip = clip;
             source.playOnAwake = false;
             source.loop = true;
             source.spatialBlend = 0f;
             return source;
+        }
+
+        private static AudioClip RequireAudioClip(string clipPath)
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+            if (clip == null)
+            {
+                throw new InvalidOperationException($"Required audio clip was not found at {clipPath}.");
+            }
+
+            return clip;
         }
 
         private static void CreateStage(Transform parent, Material darkMaterial, Material lineMaterial)

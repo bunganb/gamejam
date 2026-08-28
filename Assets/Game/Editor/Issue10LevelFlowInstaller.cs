@@ -12,6 +12,7 @@ namespace GameJam.Editor
     {
         private const string ScenePath = "Assets/Game/Scenes/GameplayPrototype.unity";
         private const string LevelFolder = "Assets/Game/Data/Levels";
+        private const string MusicFolder = "Assets/Game/Data/Music";
         private static readonly string[] LevelPaths =
         {
             LevelFolder + "/Level_01_Prototype.asset",
@@ -31,6 +32,7 @@ namespace GameJam.Editor
             }
 
             var levels = BuildLevels();
+            var musicProfiles = BuildMusicProfiles(levels);
             var scene = SceneManager.GetSceneByPath(ScenePath);
             var openedAdditively = !scene.IsValid() || !scene.isLoaded;
             if (openedAdditively)
@@ -64,6 +66,9 @@ namespace GameJam.Editor
             }
 
             loader.ConfigureReferences(levels, board, player, controller, eventHub);
+            var musicDirector = FindComponent<PrototypeMusicDirector>(scene);
+            musicDirector?.ConfigureMusicCatalog(loader, musicProfiles);
+            FindComponent<TileBeatSequencer>(scene)?.ConfigureMusicCatalog(loader, musicProfiles);
             bootstrap.enabled = false;
             controller.ConfigureReferences(levels[0], board, player, eventHub);
             board.BuildBoard(levels[0]);
@@ -94,66 +99,68 @@ namespace GameJam.Editor
                     "Level_01",
                     new[] { "111", "111", "111" },
                     new Vector2Int(3, 3),
-                    new[] { 1, 1, 1, 1, 4 },
+                    new[] { 4, 4, 3 },
                     new[]
                     {
-                        MoveDirection.Down, MoveDirection.Right, MoveDirection.Up, MoveDirection.Up,
-                        MoveDirection.Left, MoveDirection.Left, MoveDirection.Down, MoveDirection.Right
+                        MoveDirection.Down, MoveDirection.Left, MoveDirection.Up, MoveDirection.Up,
+                        MoveDirection.Right, MoveDirection.Right, MoveDirection.Down, MoveDirection.Down,
+                        MoveDirection.Left, MoveDirection.Left, MoveDirection.Up
                     },
                     new[,]
                     {
                         { BeatColor.Yellow, BeatColor.Yellow, BeatColor.Blue },
-                        { BeatColor.Yellow, BeatColor.Magenta, BeatColor.Yellow },
-                        { BeatColor.Blue, BeatColor.Magenta, BeatColor.Magenta }
+                        { BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue },
+                        { BeatColor.Yellow, BeatColor.Blue, BeatColor.Blue }
                     }),
                 new LevelSpecification(
                     "Level_02",
                     new[] { "0110", "1111", "1111", "0110" },
                     new Vector2Int(2, 3),
-                    new[] { 2, 2, 2 },
+                    new[] { 4, 3, 2 },
                     new[]
                     {
                         MoveDirection.Left, MoveDirection.Down, MoveDirection.Right,
-                        MoveDirection.Down, MoveDirection.Right, MoveDirection.Up
+                        MoveDirection.Down, MoveDirection.Right, MoveDirection.Up,
+                        MoveDirection.Up, MoveDirection.Right, MoveDirection.Down
                     }),
                 new LevelSpecification(
                     "Level_03",
                     new[] { "11111", "11111", "01000" },
                     new Vector2Int(1, 3),
-                    new[] { 2, 1, 1, 1, 2, 1 },
+                    new[] { 4, 4, 3 },
                     new[]
                     {
-                        MoveDirection.Down, MoveDirection.Right, MoveDirection.Right, MoveDirection.Up,
-                        MoveDirection.Left, MoveDirection.Up, MoveDirection.Down, MoveDirection.Left
+                        MoveDirection.Down, MoveDirection.Right, MoveDirection.Right, MoveDirection.Right,
+                        MoveDirection.Right, MoveDirection.Up, MoveDirection.Left, MoveDirection.Left,
+                        MoveDirection.Left, MoveDirection.Up, MoveDirection.Down
                     }),
                 new LevelSpecification(
                     "Level_04",
                     new[] { "001001", "111111", "111111", "101001" },
                     new Vector2Int(3, 2),
-                    new[] { 1, 2, 3, 4 },
+                    new[] { 4, 3, 1, 2 },
                     new[]
                     {
-                        MoveDirection.Left, MoveDirection.Down, MoveDirection.Up, MoveDirection.Up,
-                        MoveDirection.Left, MoveDirection.Left, MoveDirection.Up, MoveDirection.Down,
-                        MoveDirection.Right, MoveDirection.Right
+                        MoveDirection.Right, MoveDirection.Right, MoveDirection.Up, MoveDirection.Up,
+                        MoveDirection.Down, MoveDirection.Left, MoveDirection.Left, MoveDirection.Down,
+                        MoveDirection.Left, MoveDirection.Left
                     }),
                 new LevelSpecification(
                     "Level_05",
                     new[] { "01110", "01110", "01110", "11111", "11111" },
                     new Vector2Int(3, 5),
-                    new[] { 4, 2, 1, 3, 4 },
+                    new[] { 4, 2, 2, 2 },
                     new[]
                     {
                         MoveDirection.Left, MoveDirection.Left, MoveDirection.Down, MoveDirection.Right,
                         MoveDirection.Down, MoveDirection.Down, MoveDirection.Down, MoveDirection.Right,
-                        MoveDirection.Right, MoveDirection.Up, MoveDirection.Up, MoveDirection.Up,
                         MoveDirection.Right, MoveDirection.Up
                     }),
                 new LevelSpecification(
                     "Level_06",
                     new[] { "00100", "00100", "11111", "11111", "11111", "10001" },
                     new Vector2Int(3, 3),
-                    new[] { 4, 2, 5 },
+                    new[] { 4, 4, 2, 1 },
                     new[]
                     {
                         MoveDirection.Down, MoveDirection.Down, MoveDirection.Down, MoveDirection.Up,
@@ -169,6 +176,182 @@ namespace GameJam.Editor
             }
 
             return levels;
+        }
+
+        private static LevelMusicDefinition[] BuildMusicProfiles(IReadOnlyList<LevelDefinition> levels)
+        {
+            EnsureAssetFolder("Assets/Game/Data", "Music");
+            var profiles = new[]
+            {
+                BuildMusicProfile(
+                    1, 130f, 2, 8,
+                    "Level_1/1_Harmony.wav", null, 1f,
+                    "Level_1/5_BassGuitar.wav", null, -1,
+                    "Level_1/6_FullSong.wav",
+                    new[]
+                    {
+                        "Magenta_Kick.wav", "Magenta_Kick.wav", "Magenta_Kick.wav", "Magenta_Kick.wav",
+                        "Yellow_Ketipung1.wav", "Yellow_Ketipung1.wav", "Yellow_Ketipung1.wav", "Yellow_Ketipung1_Accent.wav",
+                        "Blue_Ketipung2.wav", "Blue_Ketipung2_Accent.wav", "Blue_Ketipung2_Accent.wav"
+                    },
+                    new[] { 0, 3, 5, 6, 1, 3, 5, 7, 2, 4, 6 },
+                    new[] { .72f, .72f, .72f, .72f, .52f, .52f, .52f, .9f, .52f, .9f, .9f }),
+                BuildMusicProfile(
+                    2, 130f, 4, 16,
+                    "Level_2/1_HARMONY.wav", null, 1f,
+                    "Level_2/5_BASS GUITAR & KETIPUNG 3.wav", null, -1,
+                    "Level_2/6_FULLSONG.wav",
+                    GeneratedSamples(2, 9),
+                    new[] { 0, 6, 10, 12, 2, 8, 14, 4, 11 },
+                    new[] { .72f, .72f, .72f, .72f, .9f, .52f, .72f, .82f, .82f }),
+                BuildMusicProfile(
+                    3, 129.915f, 4, 16,
+                    "Level_3/1_HARMONY.wav", null, 1f,
+                    "Level_3/5_HARMONY 2.wav", null, -1,
+                    "Level_3/6_FULLSONG.wav",
+                    GeneratedSamples(3, 11),
+                    new[] { 0, 6, 10, 12, 2, 6, 10, 14, 4, 9, 12 },
+                    new[] { .72f, .72f, .72f, .72f, .88f, .55f, .88f, .55f, .75f, .9f, .75f }),
+                BuildMusicProfile(
+                    4, 129.915f, 4, 16,
+                    "Level_4/1_HARMONY.wav", null, 1f,
+                    "Level_4/6_HARMONY 2.wav", null, -1,
+                    "Level_4/7_FULL SONG.wav",
+                    GeneratedSamples(4, 10),
+                    new[] { 0, 6, 10, 12, 2, 6, 14, 8, 4, 12 },
+                    new[] { .72f, .72f, .72f, .72f, .82f, .82f, .82f, .9f, .78f, .78f }),
+                BuildMusicProfile(
+                    5, 130f, 4, 16,
+                    "Level_5/1_HARMONY.wav", null, 1f,
+                    "Level_5/6_HARMONY 2.wav", null, -1,
+                    "Level_5/7_FULL SONG.wav",
+                    GeneratedSamples(5, 10),
+                    new[] { 0, 6, 10, 12, 2, 6, 4, 12, 8, 14 },
+                    new[] { .72f, .72f, .72f, .72f, .82f, .82f, .88f, .55f, .9f, .72f }),
+                BuildMusicProfile(
+                    6, 130f, 4, 16,
+                    "Level_6/1_HARMONY.wav", "Level_6/2_HARMONY 2.wav", .7f,
+                    "Level_6/7_BASS GUITAR.wav", "Level_6/6_SNARE & HIHAT.wav", 3,
+                    "Level_6/8_FULL SONG.wav",
+                    GeneratedSamples(6, 11),
+                    new[] { 0, 6, 10, 12, 2, 6, 8, 14, 4, 12, 8 },
+                    new[] { .72f, .72f, .72f, .72f, .68f, .68f, .9f, .62f, .88f, .55f, .9f })
+            };
+
+            for (var index = 0; index < profiles.Length; index++)
+            {
+                if (!profiles[index].TryValidate(levels[index].TotalNotes, out var error))
+                {
+                    throw new InvalidOperationException(error);
+                }
+            }
+
+            return profiles;
+        }
+
+        private static LevelMusicDefinition BuildMusicProfile(
+            int levelNumber,
+            float bpm,
+            int subdivisions,
+            int loopSteps,
+            string harmonyPath,
+            string secondaryPath,
+            float secondaryThreshold,
+            string buildPath,
+            string topLoopPath,
+            int topLoopRow,
+            string fullSongPath,
+            IReadOnlyList<string> samplePaths,
+            IReadOnlyList<int> slots,
+            IReadOnlyList<float> volumes)
+        {
+            var assetPath = $"{MusicFolder}/LevelMusic_{levelNumber:00}.asset";
+            var profile = AssetDatabase.LoadAssetAtPath<LevelMusicDefinition>(assetPath);
+            if (profile == null)
+            {
+                profile = ScriptableObject.CreateInstance<LevelMusicDefinition>();
+                AssetDatabase.CreateAsset(profile, assetPath);
+            }
+
+            var samples = new AudioClip[samplePaths.Count];
+            for (var index = 0; index < samples.Length; index++)
+            {
+                var sampleRoot = levelNumber == 1
+                    ? "Assets/Game/Art/Beat/OneShots/"
+                    : $"Assets/Game/Art/Beat/OneShots/Level_{levelNumber:00}/";
+                samples[index] = RequireAudioClip(sampleRoot + samplePaths[index]);
+            }
+
+            profile.SetData(
+                $"Level_{levelNumber:00}",
+                bpm,
+                subdivisions,
+                loopSteps,
+                RequireAudioClip("Assets/Game/Art/Beat/" + harmonyPath),
+                OptionalAudioClip(secondaryPath),
+                secondaryThreshold,
+                OptionalAudioClip(buildPath),
+                .8f,
+                OptionalAudioClip(topLoopPath),
+                topLoopRow,
+                RequireAudioClip("Assets/Game/Art/Beat/" + fullSongPath),
+                samples,
+                slots,
+                volumes);
+            EditorUtility.SetDirty(profile);
+            return profile;
+        }
+
+        private static string[] GeneratedSamples(int levelNumber, int count)
+        {
+            var folder = $"Assets/Game/Art/Beat/OneShots/Level_{levelNumber:00}";
+            var guids = AssetDatabase.FindAssets("t:AudioClip", new[] { folder });
+            var paths = new List<string>(guids.Length);
+            foreach (var guid in guids)
+            {
+                paths.Add(AssetDatabase.GUIDToAssetPath(guid));
+            }
+
+            paths.Sort(StringComparer.Ordinal);
+            if (paths.Count != count)
+            {
+                throw new InvalidOperationException($"Level {levelNumber} requires {count} generated one-shots, found {paths.Count}.");
+            }
+
+            var names = new string[count];
+            for (var index = 0; index < count; index++)
+            {
+                names[index] = paths[index].Substring(paths[index].LastIndexOf('/') + 1);
+            }
+
+            return names;
+        }
+
+        private static AudioClip OptionalAudioClip(string relativePath)
+        {
+            return string.IsNullOrWhiteSpace(relativePath)
+                ? null
+                : RequireAudioClip("Assets/Game/Art/Beat/" + relativePath);
+        }
+
+        private static AudioClip RequireAudioClip(string path)
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+            if (clip == null)
+            {
+                throw new InvalidOperationException($"Required audio clip was not found: {path}");
+            }
+
+            return clip;
+        }
+
+        private static void EnsureAssetFolder(string parent, string child)
+        {
+            var path = parent + "/" + child;
+            if (!AssetDatabase.IsValidFolder(path))
+            {
+                AssetDatabase.CreateFolder(parent, child);
+            }
         }
 
         private static LevelDefinition BuildLevel(int index, LevelSpecification specification)

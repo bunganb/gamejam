@@ -10,7 +10,8 @@ namespace GameJam.Editor
     {
         private const string ScenePath = "Assets/Game/Scenes/GameplayPrototype.unity";
         private const string LevelPath = "Assets/Game/Data/Levels/Level_01_Prototype.asset";
-        private const string BeatRoot = "Assets/Game/Art/Beat/Prototype/";
+        private const string BeatRoot = "Assets/Game/Art/Beat/Level_1/";
+        private const string OneShotRoot = "Assets/Game/Art/Beat/OneShots/";
 
         [MenuItem("Game Jam/Install Issue 9 Gameplay")]
         public static void Install()
@@ -23,11 +24,9 @@ namespace GameJam.Editor
 
             var objectives = new[]
             {
-                new ObjectiveRowDefinition(BeatColor.Magenta),
-                new ObjectiveRowDefinition(BeatColor.Yellow),
-                new ObjectiveRowDefinition(BeatColor.Magenta),
-                new ObjectiveRowDefinition(BeatColor.Blue),
-                new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue)
+                new ObjectiveRowDefinition(BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta),
+                new ObjectiveRowDefinition(BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow),
+                new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Blue, BeatColor.Blue)
             };
             level.SetData(level.Cells, level.PlayerStart, objectives);
             EditorUtility.SetDirty(level);
@@ -68,6 +67,26 @@ namespace GameJam.Editor
             var fullSong = EnsureAudioLayer(musicRoot, "FullSong_06", BeatRoot + "6_FullSong.wav");
             var musicDirector = GetOrAdd<PrototypeMusicDirector>(musicRoot.gameObject);
             musicDirector.ConfigureReferences(eventHub, harmony, drumKick, ketipungOne, ketipungTwo, bass, fullSong);
+            var levelLoader = systems.GetComponent<LevelLoader>();
+            musicDirector.ConfigureSampleSequencerScope(levelLoader, 0);
+            musicDirector.ConfigureFullSongTransition(0.80f, 0.75f, 1.15f);
+            var sequencer = GetOrAdd<TileBeatSequencer>(musicRoot.gameObject);
+            sequencer.ConfigureReferences(
+                eventHub,
+                musicDirector,
+                levelLoader,
+                RequireAudioClip(OneShotRoot + "Magenta_Kick.wav"),
+                RequireAudioClip(OneShotRoot + "Yellow_Ketipung1.wav"),
+                RequireAudioClip(OneShotRoot + "Yellow_Ketipung1_Accent.wav"),
+                RequireAudioClip(OneShotRoot + "Blue_Ketipung2.wav"),
+                RequireAudioClip(OneShotRoot + "Blue_Ketipung2_Accent.wav"),
+                0);
+            sequencer.ConfigurePattern(
+                8,
+                2,
+                new[] { 0, 3, 5, 6, 1, 3, 5, 7, 2, 4, 6 },
+                new[] { false, false, false, false, false, false, false, true, false, true, true });
+            sequencer.ConfigureTileBeatTransition(0.06f);
 
             var bootstrap = GetOrAdd<GameplayPrototypeBootstrap>(systems);
             bootstrap.ConfigureReferences(level, board, player, controller);
@@ -135,6 +154,12 @@ namespace GameJam.Editor
 
         private static AudioSource EnsureAudioLayer(Transform parent, string name, string clipPath)
         {
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+            if (clip == null)
+            {
+                throw new System.InvalidOperationException($"Required audio clip was not found at {clipPath}.");
+            }
+
             var child = parent.Find(name);
             if (child == null)
             {
@@ -143,11 +168,22 @@ namespace GameJam.Editor
             }
 
             var source = GetOrAdd<AudioSource>(child.gameObject);
-            source.clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+            source.clip = clip;
             source.playOnAwake = false;
             source.loop = true;
             source.spatialBlend = 0f;
             return source;
+        }
+
+        private static AudioClip RequireAudioClip(string clipPath)
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+            if (clip == null)
+            {
+                throw new System.InvalidOperationException($"Required audio clip was not found at {clipPath}.");
+            }
+
+            return clip;
         }
     }
 }

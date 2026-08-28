@@ -266,13 +266,13 @@ namespace GameJam.Gameplay
         {
             if (keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame)
             {
-                direction = Vector2Int.down;
+                direction = Vector2Int.up;
                 return true;
             }
 
             if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame)
             {
-                direction = Vector2Int.up;
+                direction = Vector2Int.down;
                 return true;
             }
 

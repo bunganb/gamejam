@@ -409,7 +409,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 11b263053bef5e84b8adfc16794ed5f5, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -2191,7 +2191,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: a7d7d6aa71896e94e9aad904870b8cb7, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -6056,7 +6056,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 62aef3d8cf1ec684680369077bd4bc86, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -6893,6 +6893,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1970960021}
   - component: {fileID: 1970960022}
+  - component: {fileID: 1970960023}
   m_Layer: 0
   m_Name: PrototypeMusic
   m_TagString: Untagged
@@ -6940,13 +6941,64 @@ MonoBehaviour:
   ketipungTwoSource: {fileID: 103918567}
   bassSource: {fileID: 133306957}
   fullSongSource: {fileID: 1700250266}
+  levelLoader: {fileID: 1666553742}
+  musicProfiles:
+  - {fileID: 11400000, guid: 4fb3e92e5b4c11c459566173f2234f39, type: 2}
+  - {fileID: 11400000, guid: 4b253a234d7fa314da49a06f8b00c810, type: 2}
+  - {fileID: 11400000, guid: cb7c130aa46626c4bbfa620bca0ac723, type: 2}
+  - {fileID: 11400000, guid: 5f1cdbe82703b7b468b1e688bc68ccce, type: 2}
+  - {fileID: 11400000, guid: adbf1847b378079499262c5b36718cdf, type: 2}
+  - {fileID: 11400000, guid: e629fe1122dd88a4d963f81821aac76a, type: 2}
+  sampleSequencerLevelIndex: 0
   layerFadeDuration: 0.12
   bassFadeInDuration: 0.45
+  earlyBassProgress: 0.8
+  earlyBassFadeInDuration: 0.75
   bassHoldDuration: 0.35
-  fullSongCrossfadeDuration: 0.8
+  fullSongCrossfadeDuration: 1.15
   bpm: 130
   subdivisionsPerBeat: 2
   quantizationLeadTime: 0.01
+--- !u!114 &1970960023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1970960020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ee6881a7e4dbc64fbf5228614ebb04b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.TileBeatSequencer
+  gameplayEvents: {fileID: 1666553741}
+  musicDirector: {fileID: 1970960022}
+  levelLoader: {fileID: 1666553742}
+  kick: {fileID: 8300000, guid: 4db1e8fc761f0554d82c8da9a6822d42, type: 3}
+  ketipungOneSoft: {fileID: 8300000, guid: b9344a49e33201144873055925fbd931, type: 3}
+  ketipungOneAccent: {fileID: 8300000, guid: 04def9f99b951d649acd7459b6776ac4, type: 3}
+  ketipungTwoSoft: {fileID: 8300000, guid: 47c4cd3db07d659428e6a181c12b7446, type: 3}
+  ketipungTwoAccent: {fileID: 8300000, guid: d2806509a3edc5b47a8c693f496ea71b, type: 3}
+  musicProfiles:
+  - {fileID: 11400000, guid: 4fb3e92e5b4c11c459566173f2234f39, type: 2}
+  - {fileID: 11400000, guid: 4b253a234d7fa314da49a06f8b00c810, type: 2}
+  - {fileID: 11400000, guid: cb7c130aa46626c4bbfa620bca0ac723, type: 2}
+  - {fileID: 11400000, guid: 5f1cdbe82703b7b468b1e688bc68ccce, type: 2}
+  - {fileID: 11400000, guid: adbf1847b378079499262c5b36718cdf, type: 2}
+  - {fileID: 11400000, guid: e629fe1122dd88a4d963f81821aac76a, type: 2}
+  enabledLevelIndex: 0
+  subdivisionsPerBeat: 2
+  loopStepCount: 8
+  sequenceSlots: 0000000003000000050000000600000001000000030000000500000007000000020000000400000006000000
+  sequenceAccents: 0000000000000001000101
+  previewVoiceCount: 8
+  loopVoiceCount: 12
+  kickVolume: 0.72
+  softVolume: 0.52
+  accentVolume: 0.9
+  tileBeatFadeInDuration: 0.06
+  schedulingLeadTime: 0.03
+  loopScheduleAhead: 0.35
 --- !u!1 &1986540029
 GameObject:
   m_ObjectHideFlags: 0

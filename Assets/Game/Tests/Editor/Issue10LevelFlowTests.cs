@@ -18,6 +18,16 @@ namespace GameJam.Gameplay.Tests
             "Assets/Game/Data/Levels/Level_06.asset"
         };
 
+        private static readonly string[] MusicPaths =
+        {
+            "Assets/Game/Data/Music/LevelMusic_01.asset",
+            "Assets/Game/Data/Music/LevelMusic_02.asset",
+            "Assets/Game/Data/Music/LevelMusic_03.asset",
+            "Assets/Game/Data/Music/LevelMusic_04.asset",
+            "Assets/Game/Data/Music/LevelMusic_05.asset",
+            "Assets/Game/Data/Music/LevelMusic_06.asset"
+        };
+
         private static readonly string[][] Masks =
         {
             new[] { "111", "111", "111" },
@@ -30,12 +40,12 @@ namespace GameJam.Gameplay.Tests
 
         private static readonly int[][] RowLengths =
         {
-            new[] { 1, 1, 1, 1, 4 },
-            new[] { 2, 2, 2 },
-            new[] { 2, 1, 1, 1, 2, 1 },
-            new[] { 1, 2, 3, 4 },
-            new[] { 4, 2, 1, 3, 4 },
-            new[] { 4, 2, 5 }
+            new[] { 4, 4, 3 },
+            new[] { 4, 3, 2 },
+            new[] { 4, 4, 3 },
+            new[] { 4, 3, 1, 2 },
+            new[] { 4, 2, 2, 2 },
+            new[] { 4, 4, 2, 1 }
         };
 
         private static readonly Vector2Int[] PlayerStarts =
@@ -82,6 +92,28 @@ namespace GameJam.Gameplay.Tests
                 Assert.That(level.ExpectedSolution.Count, Is.EqualTo(level.TotalNotes));
                 Assert.That(LevelSolutionValidator.TryValidate(level, out var error), Is.True, error);
             }
+        }
+
+        [Test]
+        public void SixMusicProfiles_MatchLevelNotesAndUseSixteenthGridAfterPrototype()
+        {
+            for (var levelIndex = 0; levelIndex < LevelPaths.Length; levelIndex++)
+            {
+                var level = LoadLevel(levelIndex);
+                var music = AssetDatabase.LoadAssetAtPath<LevelMusicDefinition>(MusicPaths[levelIndex]);
+                Assert.That(music, Is.Not.Null, $"Missing music profile: {MusicPaths[levelIndex]}");
+                Assert.That(music.LevelId, Is.EqualTo(level.LevelId));
+                Assert.That(music.TryValidate(level.TotalNotes, out var error), Is.True, error);
+                Assert.That(music.BuildLayerThreshold, Is.EqualTo(.8f).Within(.0001f));
+                Assert.That(music.TileFadeInDuration, Is.EqualTo(.06f).Within(.0001f));
+                Assert.That(music.LoopEntryDelayBeats, Is.EqualTo(.5f).Within(.0001f));
+                Assert.That(music.SubdivisionsPerBeat, Is.EqualTo(levelIndex == 0 ? 2 : 4));
+                Assert.That(music.LoopStepCount, Is.EqualTo(levelIndex == 0 ? 8 : 16));
+            }
+
+            var finalMusic = AssetDatabase.LoadAssetAtPath<LevelMusicDefinition>(MusicPaths[5]);
+            Assert.That(finalMusic.TopLoopLayer, Is.Not.Null);
+            Assert.That(finalMusic.TopLoopUnlockRow, Is.EqualTo(3));
         }
 
         [Test]
