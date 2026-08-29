@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04a76f304cf2d334e8d979aac3f0e26b, type: 3}
+  m_Name: LevelMusic_04
+  m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.LevelMusicDefinition
+  levelId: Level_04
+  bpm: 129.915
+  subdivisionsPerBeat: 4
+  loopStepCount: 16
+  baseHarmony: {fileID: 8300000, guid: 64674f584f2c4804b855dc4dedfcfa7f, type: 3}
+  secondaryLayer: {fileID: 0}
+  secondaryLayerThreshold: 1
+  buildLayer: {fileID: 8300000, guid: b57300dd2e621e64fbdf3d4411d30476, type: 3}
+  buildLayerThreshold: 0.8
+  topLoopLayer: {fileID: 0}
+  topLoopUnlockRow: -1
+  fullSong: {fileID: 8300000, guid: 7d9d95a74f5bba546a5827b97023e35c, type: 3}
+  noteSamples:
+  - {fileID: 8300000, guid: e2792e0a4fc703c488c523ee23676ad1, type: 3}
+  - {fileID: 8300000, guid: a078dc67452e28a41ba4f2e0ba072b8a, type: 3}
+  - {fileID: 8300000, guid: 939ab930180a3614b98df98485a9b852, type: 3}
+  - {fileID: 8300000, guid: 710418a332928ed4a86a56f49d3612ba, type: 3}
+  - {fileID: 8300000, guid: 3f8ede56f629f8f48bff2938a2964397, type: 3}
+  - {fileID: 8300000, guid: 4e76a349c22ee2542a32650404da5a32, type: 3}
+  - {fileID: 8300000, guid: 64edf151d0514284ead14ae5282decae, type: 3}
+  - {fileID: 8300000, guid: 2252d33faba126b4091aa5354ae50cce, type: 3}
+  - {fileID: 8300000, guid: 3bf8adf3f33f7f84a9c5331a488c437c, type: 3}
+  - {fileID: 8300000, guid: 11a9060217168f746b432ac18c167e29, type: 3}
+  sequenceSlots: 00000000060000000a0000000c00000002000000060000000e00000008000000040000000c000000
+  noteVolumes:
+  - 0.72
+  - 0.72
+  - 0.72
+  - 0.72
+  - 0.82
+  - 0.82
+  - 0.82
+  - 0.9
+  - 0.78
+  - 0.78
+  tileFadeInDuration: 0.06
+  loopEntryDelayBeats: 0.5
