@@ -18,6 +18,9 @@ MonoBehaviour:
   grooveSwayMultiplier: 1.8
   grooveBlendDuration: 0.7
   transformDamping: 0.14
+  tileMoveZoomFov: 0.75
+  tileMoveZoomDuration: 0.18
+  tileMoveZoomInRatio: 0.38
   notePulseFov: 0
   notePulseDuration: 0.16
   grooveDanceInterval: 2.4

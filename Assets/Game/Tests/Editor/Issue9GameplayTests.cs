@@ -57,8 +57,9 @@ namespace GameJam.Gameplay.Tests
             var tracker = CreateTracker();
             var expected = new[]
             {
-                BeatColor.Magenta, BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue,
-                BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue
+                BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta,
+                BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow,
+                BeatColor.Blue, BeatColor.Blue, BeatColor.Blue
             };
 
             for (var index = 0; index < expected.Length; index++)
@@ -71,9 +72,9 @@ namespace GameJam.Gameplay.Tests
             }
 
             Assert.That(tracker.IsComplete, Is.True);
-            Assert.That(tracker.MatchedTotal, Is.EqualTo(8));
+            Assert.That(tracker.MatchedTotal, Is.EqualTo(expected.Length));
             Assert.That(tracker.Resolve(BeatColor.Blue), Is.EqualTo(ObjectiveMatchResult.ChainCompleted));
-            Assert.That(tracker.MatchedTotal, Is.EqualTo(8));
+            Assert.That(tracker.MatchedTotal, Is.EqualTo(expected.Length));
         }
 
         [Test]
@@ -82,22 +83,23 @@ namespace GameJam.Gameplay.Tests
             var tracker = CreateTracker();
             var colors = new Dictionary<Vector2Int, BeatColor>
             {
-                [new Vector2Int(1, 1)] = BeatColor.Yellow,
-                [new Vector2Int(2, 1)] = BeatColor.Yellow,
-                [new Vector2Int(3, 1)] = BeatColor.Blue,
-                [new Vector2Int(1, 2)] = BeatColor.Yellow,
-                [new Vector2Int(2, 2)] = BeatColor.Magenta,
+                [new Vector2Int(2, 2)] = BeatColor.Yellow,
                 [new Vector2Int(3, 2)] = BeatColor.Yellow,
-                [new Vector2Int(1, 3)] = BeatColor.Blue,
-                [new Vector2Int(2, 3)] = BeatColor.Magenta,
-                [new Vector2Int(3, 3)] = BeatColor.Magenta
+                [new Vector2Int(4, 2)] = BeatColor.Blue,
+                [new Vector2Int(2, 3)] = BeatColor.Yellow,
+                [new Vector2Int(3, 3)] = BeatColor.Magenta,
+                [new Vector2Int(4, 3)] = BeatColor.Blue,
+                [new Vector2Int(2, 4)] = BeatColor.Yellow,
+                [new Vector2Int(3, 4)] = BeatColor.Blue,
+                [new Vector2Int(4, 4)] = BeatColor.Blue
             };
             var directions = new[]
             {
-                Vector2Int.down, Vector2Int.right, Vector2Int.up, Vector2Int.up,
-                Vector2Int.left, Vector2Int.left, Vector2Int.down, Vector2Int.right
+                Vector2Int.down, Vector2Int.left, Vector2Int.up, Vector2Int.up,
+                Vector2Int.right, Vector2Int.right, Vector2Int.down, Vector2Int.down,
+                Vector2Int.left, Vector2Int.left, Vector2Int.up
             };
-            var coordinate = new Vector2Int(2, 2);
+            var coordinate = new Vector2Int(3, 3);
 
             foreach (var direction in directions)
             {
@@ -124,15 +126,84 @@ namespace GameJam.Gameplay.Tests
             Assert.That(skippedGrid, Is.EqualTo(timelineStart + stepDuration * 2d).Within(0.000001d));
         }
 
+        [Test]
+        public void BeatSequencer_RapidInputsOccupyConsecutiveGridSlots()
+        {
+            const double timelineStart = 100d;
+            const double currentTime = 100.1d;
+            var stepDuration = 60d / 130d / 2d;
+            var first = TileBeatSequencer.CalculateNextSequenceDspTime(
+                timelineStart, currentTime, 130f, 2, 0.03f, 0d);
+            var second = TileBeatSequencer.CalculateNextSequenceDspTime(
+                timelineStart, currentTime, 130f, 2, 0.03f, first);
+            var third = TileBeatSequencer.CalculateNextSequenceDspTime(
+                timelineStart, currentTime, 130f, 2, 0.03f, second);
+
+            Assert.That(second, Is.EqualTo(first + stepDuration).Within(0.000001d));
+            Assert.That(third, Is.EqualTo(second + stepDuration).Within(0.000001d));
+        }
+
+        [Test]
+        public void BeatSequencer_LoopRestartsOnEightStepBarBoundary()
+        {
+            const double timelineStart = 100d;
+            var stepDuration = 60d / 130d / 2d;
+            var loopDuration = stepDuration * 8d;
+            var firstBoundary = TileBeatSequencer.CalculateNextLoopBoundaryDspTime(
+                timelineStart, 100.1d, 130f, 2, 8, 0.03f);
+
+            Assert.That(firstBoundary, Is.EqualTo(timelineStart + loopDuration).Within(0.000001d));
+
+            var nearBoundary = timelineStart + loopDuration - 0.01d;
+            var skippedBoundary = TileBeatSequencer.CalculateNextLoopBoundaryDspTime(
+                timelineStart, nearBoundary, 130f, 2, 8, 0.03f);
+            Assert.That(skippedBoundary, Is.EqualTo(timelineStart + loopDuration * 2d).Within(0.000001d));
+        }
+
+        [Test]
+        public void BeatSequencer_TileFadeUsesSmoothAttackWithoutOvershoot()
+        {
+            Assert.That(TileBeatSequencer.CalculateFadeInGain(10d, 10d, 0.06f), Is.EqualTo(0f));
+            Assert.That(TileBeatSequencer.CalculateFadeInGain(10.03d, 10d, 0.06f), Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(TileBeatSequencer.CalculateFadeInGain(10.06d, 10d, 0.06f), Is.EqualTo(1f));
+            Assert.That(TileBeatSequencer.CalculateFadeInGain(11d, 10d, 0.06f), Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void BeatSequencer_NewLoopNoteWaitsThenEntersItsNextMusicalSlot()
+        {
+            const double timelineStart = 100d;
+            const double currentTime = 100.2d;
+            const double earliestTime = 100.2d + 60d / 130d / 2d;
+            var target = TileBeatSequencer.CalculateNextSlotDspTime(
+                timelineStart, currentTime, earliestTime, 130f, 4, 16, 6, 0.03f);
+
+            var expectedSlotTime = timelineStart + 6d * (60d / 130d / 4d);
+            Assert.That(target, Is.EqualTo(expectedSlotTime).Within(0.000001d));
+            Assert.That(target, Is.GreaterThanOrEqualTo(earliestTime));
+        }
+
+        [Test]
+        public void EarlyBass_UnlocksAtFirstLevelOneStepAboveEightyPercent()
+        {
+            Assert.That(
+                PrototypeMusicDirector.ShouldUnlockBassEarly(8f / 11f, 0.80f, false, false),
+                Is.False);
+            Assert.That(
+                PrototypeMusicDirector.ShouldUnlockBassEarly(9f / 11f, 0.80f, false, false),
+                Is.True);
+            Assert.That(
+                PrototypeMusicDirector.ShouldUnlockBassEarly(9f / 11f, 0.80f, false, true),
+                Is.False);
+        }
+
         private static ObjectiveProgressTracker CreateTracker()
         {
             return new ObjectiveProgressTracker(new[]
             {
-                new ObjectiveRowDefinition(BeatColor.Magenta),
-                new ObjectiveRowDefinition(BeatColor.Yellow),
-                new ObjectiveRowDefinition(BeatColor.Magenta),
-                new ObjectiveRowDefinition(BeatColor.Blue),
-                new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue)
+                new ObjectiveRowDefinition(BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta, BeatColor.Magenta),
+                new ObjectiveRowDefinition(BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow, BeatColor.Yellow),
+                new ObjectiveRowDefinition(BeatColor.Blue, BeatColor.Blue, BeatColor.Blue)
             });
         }
     }

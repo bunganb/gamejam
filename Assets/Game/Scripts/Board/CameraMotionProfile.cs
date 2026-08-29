@@ -13,6 +13,11 @@ namespace GameJam.Gameplay
         [SerializeField, Min(0.01f)] private float grooveBlendDuration = 0.7f;
         [SerializeField, Min(0.01f)] private float transformDamping = 0.14f;
 
+        [Header("Tile Move Zoom Punch")]
+        [SerializeField, Min(0f)] private float tileMoveZoomFov = 0.75f;
+        [SerializeField, Min(0.05f)] private float tileMoveZoomDuration = 0.18f;
+        [SerializeField, Range(0.2f, 0.7f)] private float tileMoveZoomInRatio = 0.38f;
+
         [Header("Groove")]
         [SerializeField, Min(0f)] private float notePulseFov;
         [SerializeField, Min(0.01f)] private float notePulseDuration = 0.14f;
@@ -51,6 +56,9 @@ namespace GameJam.Gameplay
         public float GrooveSwayMultiplier => grooveSwayMultiplier;
         public float GrooveBlendDuration => grooveBlendDuration;
         public float TransformDamping => transformDamping;
+        public float TileMoveZoomFov => tileMoveZoomFov;
+        public float TileMoveZoomDuration => tileMoveZoomDuration;
+        public float TileMoveZoomInRatio => tileMoveZoomInRatio;
         public float NotePulseFov => notePulseFov;
         public float NotePulseDuration => notePulseDuration;
         public float GrooveDanceInterval => grooveDanceInterval;
@@ -85,6 +93,9 @@ namespace GameJam.Gameplay
             grooveSwayMultiplier = 1.8f;
             grooveBlendDuration = 0.7f;
             transformDamping = 0.14f;
+            tileMoveZoomFov = 0.75f;
+            tileMoveZoomDuration = 0.18f;
+            tileMoveZoomInRatio = 0.38f;
             notePulseFov = 0f;
             notePulseDuration = 0.16f;
             grooveDanceInterval = 2.4f;

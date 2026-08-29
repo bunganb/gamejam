@@ -7,6 +7,7 @@ namespace GameJam.Gameplay
     public sealed class PuzzleGameplayEvents : MonoBehaviour
     {
         public event Action<Vector2Int, BeatColor> TileActivated;
+        public event Action<Vector2Int> PlayerMoveStarted;
         public event Action<GameplayProgressSnapshot> ChainAdvanced;
         public event Action<GameplayProgressSnapshot> ObjectiveRowCompleted;
         public event Action<GameplayProgressSnapshot> ChainFailed;
@@ -15,6 +16,7 @@ namespace GameJam.Gameplay
         public event Action WinPresentationReady;
 
         public void PublishTileActivated(Vector2Int coordinate, BeatColor color) => TileActivated?.Invoke(coordinate, color);
+        public void PublishPlayerMoveStarted(Vector2Int direction) => PlayerMoveStarted?.Invoke(direction);
         public void PublishChainAdvanced(GameplayProgressSnapshot snapshot) => ChainAdvanced?.Invoke(snapshot);
         public void PublishObjectiveRowCompleted(GameplayProgressSnapshot snapshot) => ObjectiveRowCompleted?.Invoke(snapshot);
         public void PublishChainFailed(GameplayProgressSnapshot snapshot) => ChainFailed?.Invoke(snapshot);

@@ -53,7 +53,10 @@ namespace GameJam.Gameplay
             }
 
             activeBounds = CalculateActiveBounds(level.Cells);
-            contentOffset = CalculateContentOffset(activeBounds);
+            // The complete 7x7 launchpad is a fixed master board. Moving its content to
+            // center an even/asymmetric active mask makes every dormant pad drift away
+            // from the authored stage floor.
+            contentOffset = Vector3.zero;
             if (contentRoot != null)
             {
                 contentRoot.localPosition = contentOffset;
@@ -180,20 +183,5 @@ namespace GameJam.Gameplay
             return new BoundsInt(minX, minY, 0, maxX - minX + 1, maxY - minY + 1, 1);
         }
 
-        private Vector3 CalculateContentOffset(BoundsInt bounds)
-        {
-            if (bounds.size.x == 0 || bounds.size.y == 0)
-            {
-                return Vector3.zero;
-            }
-
-            var activeCenterX = bounds.xMin + (bounds.size.x - 1) * 0.5f;
-            var activeCenterY = bounds.yMin + (bounds.size.y - 1) * 0.5f;
-            var boardCenter = (LevelDefinition.GridWidth - 1) * 0.5f;
-            var halfSpacing = gridSpacing * 0.5f;
-            var offsetX = Mathf.Clamp((boardCenter - activeCenterX) * gridSpacing, -halfSpacing, halfSpacing);
-            var offsetZ = Mathf.Clamp((activeCenterY - boardCenter) * gridSpacing, -halfSpacing, halfSpacing);
-            return new Vector3(offsetX, 0f, offsetZ);
-        }
     }
 }

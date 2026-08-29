@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0b71f7fe5b13284bbc0963fb68a5013, type: 3}
+  m_Name: Level_05
+  m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.LevelDefinition
+  levelId: Level_05
+  cells:
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 2
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 1
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  playerStart: {x: 3, y: 5}
+  objectiveRows:
+  - notes: 02000000010000000200000000000000
+  - notes: 0100000002000000
+  - notes: 0000000001000000
+  - notes: 0200000001000000
+  expectedSolution: 02000000020000000100000003000000010000000100000001000000030000000300000000000000
+  failFeedbackDuration: 0.75
+  completionHoldDuration: 2.5

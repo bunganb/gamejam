@@ -6,17 +6,25 @@ namespace GameJam.Gameplay
     [CreateAssetMenu(fileName = "LevelDefinition", menuName = "Game Jam/Level Definition")]
     public sealed class LevelDefinition : ScriptableObject
     {
-        public const int GridWidth = 6;
-        public const int GridHeight = 6;
+        public const int GridWidth = 7;
+        public const int GridHeight = 7;
         public const int CellCount = GridWidth * GridHeight;
 
+        [SerializeField] private string levelId = "Level_01";
         [SerializeField] private BoardCellDefinition[] cells = CreateEmptyCells();
-        [SerializeField] private Vector2Int playerStart = new(2, 2);
+        [SerializeField] private Vector2Int playerStart = new(3, 3);
         [SerializeField] private ObjectiveRowDefinition[] objectiveRows = System.Array.Empty<ObjectiveRowDefinition>();
+        [SerializeField] private MoveDirection[] expectedSolution = System.Array.Empty<MoveDirection>();
+        [SerializeField, Min(0f)] private float failFeedbackDuration = 0.75f;
+        [SerializeField, Min(0f)] private float completionHoldDuration = 2.5f;
 
+        public string LevelId => levelId;
         public IReadOnlyList<BoardCellDefinition> Cells => cells;
         public Vector2Int PlayerStart => playerStart;
         public IReadOnlyList<ObjectiveRowDefinition> ObjectiveRows => objectiveRows;
+        public IReadOnlyList<MoveDirection> ExpectedSolution => expectedSolution;
+        public float FailFeedbackDuration => failFeedbackDuration;
+        public float CompletionHoldDuration => completionHoldDuration;
         public int TotalNotes
         {
             get
@@ -51,11 +59,31 @@ namespace GameJam.Gameplay
             Vector2Int start,
             IReadOnlyList<ObjectiveRowDefinition> sourceObjectives)
         {
+            SetData(
+                levelId,
+                sourceCells,
+                start,
+                sourceObjectives,
+                expectedSolution,
+                failFeedbackDuration,
+                completionHoldDuration);
+        }
+
+        public void SetData(
+            string id,
+            IReadOnlyList<BoardCellDefinition> sourceCells,
+            Vector2Int start,
+            IReadOnlyList<ObjectiveRowDefinition> sourceObjectives,
+            IReadOnlyList<MoveDirection> sourceSolution,
+            float failureDuration = 0.75f,
+            float completionDuration = 2.5f)
+        {
             if (sourceCells == null || sourceCells.Count != CellCount)
             {
                 throw new System.ArgumentException($"Level data must contain exactly {CellCount} cells.", nameof(sourceCells));
             }
 
+            levelId = id ?? string.Empty;
             cells = new BoardCellDefinition[CellCount];
             for (var index = 0; index < CellCount; index++)
             {
@@ -76,6 +104,22 @@ namespace GameJam.Gameplay
                     objectiveRows[index] = sourceObjectives[index]?.Copy();
                 }
             }
+
+            if (sourceSolution == null)
+            {
+                expectedSolution = System.Array.Empty<MoveDirection>();
+            }
+            else
+            {
+                expectedSolution = new MoveDirection[sourceSolution.Count];
+                for (var index = 0; index < sourceSolution.Count; index++)
+                {
+                    expectedSolution[index] = sourceSolution[index];
+                }
+            }
+
+            failFeedbackDuration = Mathf.Max(0f, failureDuration);
+            completionHoldDuration = Mathf.Max(0f, completionDuration);
         }
 
         public bool TryValidate(out string error)
@@ -184,6 +228,9 @@ namespace GameJam.Gameplay
             }
 
             objectiveRows ??= System.Array.Empty<ObjectiveRowDefinition>();
+            expectedSolution ??= System.Array.Empty<MoveDirection>();
+            failFeedbackDuration = Mathf.Max(0f, failFeedbackDuration);
+            completionHoldDuration = Mathf.Max(0f, completionHoldDuration);
         }
 #endif
     }
