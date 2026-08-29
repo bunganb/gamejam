@@ -168,6 +168,8 @@ namespace GameJam.Gameplay
             {
                 levelLoader.LevelChanged -= HandleLevelChanged;
                 levelLoader.LevelChanged += HandleLevelChanged;
+                levelLoader.GameLevelChanged -= HandleGameLevelChanged;
+                levelLoader.GameLevelChanged += HandleGameLevelChanged;
             }
 
             if (musicDirector != null)
@@ -191,6 +193,7 @@ namespace GameJam.Gameplay
             if (levelLoader != null)
             {
                 levelLoader.LevelChanged -= HandleLevelChanged;
+                levelLoader.GameLevelChanged -= HandleGameLevelChanged;
             }
 
             if (musicDirector != null)
@@ -224,8 +227,19 @@ namespace GameJam.Gameplay
 
         private void HandleLevelChanged(int levelIndex, LevelDefinition level)
         {
+            if (levelLoader != null && levelLoader.CurrentGameLevel != null)
+            {
+                return;
+            }
+
             ClearSequence();
             ApplyMusicProfile(levelIndex);
+        }
+
+        private void HandleGameLevelChanged(GameLevelDefinition gameLevel)
+        {
+            ClearSequence();
+            ApplyMusicProfile(gameLevel != null ? gameLevel.Music : null);
         }
 
         private void HandleFullSongActivated()
@@ -565,12 +579,27 @@ namespace GameJam.Gameplay
 
         private void ApplyMusicProfile(int levelIndex)
         {
-            activeProfile = musicProfiles != null && levelIndex >= 0 && levelIndex < musicProfiles.Length
+            var profile = musicProfiles != null && levelIndex >= 0 && levelIndex < musicProfiles.Length
                 ? musicProfiles[levelIndex]
                 : null;
+            if (profile == null)
+            {
+                activeProfile = null;
+                isActiveForLevel = musicProfiles == null || musicProfiles.Length == 0
+                    ? levelIndex == enabledLevelIndex
+                    : false;
+                return;
+            }
+
+            ApplyMusicProfile(profile);
+            enabledLevelIndex = levelIndex;
+        }
+
+        private void ApplyMusicProfile(LevelMusicDefinition profile)
+        {
+            activeProfile = profile;
             if (activeProfile != null)
             {
-                enabledLevelIndex = levelIndex;
                 subdivisionsPerBeat = activeProfile.SubdivisionsPerBeat;
                 loopStepCount = activeProfile.LoopStepCount;
                 tileBeatFadeInDuration = activeProfile.TileFadeInDuration;
@@ -578,9 +607,7 @@ namespace GameJam.Gameplay
                 return;
             }
 
-            isActiveForLevel = musicProfiles == null || musicProfiles.Length == 0
-                ? levelIndex == enabledLevelIndex
-                : false;
+            isActiveForLevel = false;
         }
 
         private static LevelMusicDefinition[] CopyProfiles(IReadOnlyList<LevelMusicDefinition> profiles)

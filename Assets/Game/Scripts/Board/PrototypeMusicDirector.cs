@@ -436,6 +436,8 @@ namespace GameJam.Gameplay
 
             levelLoader.LevelChanged -= HandleLevelChanged;
             levelLoader.LevelChanged += HandleLevelChanged;
+            levelLoader.GameLevelChanged -= HandleGameLevelChanged;
+            levelLoader.GameLevelChanged += HandleGameLevelChanged;
         }
 
         private void UnsubscribeFromLevelLoader()
@@ -443,11 +445,17 @@ namespace GameJam.Gameplay
             if (levelLoader != null)
             {
                 levelLoader.LevelChanged -= HandleLevelChanged;
+                levelLoader.GameLevelChanged -= HandleGameLevelChanged;
             }
         }
 
         private void HandleLevelChanged(int levelIndex, LevelDefinition level)
         {
+            if (levelLoader != null && levelLoader.CurrentGameLevel != null)
+            {
+                return;
+            }
+
             if (musicProfiles != null && musicProfiles.Length > 0)
             {
                 ApplyMusicProfile(levelIndex);
@@ -458,11 +466,28 @@ namespace GameJam.Gameplay
             progressiveStemLayersEnabled = levelIndex != sampleSequencerLevelIndex;
         }
 
+        private void HandleGameLevelChanged(GameLevelDefinition gameLevel)
+        {
+            if (gameLevel == null || gameLevel.Music == null)
+            {
+                return;
+            }
+
+            ApplyMusicProfile(gameLevel.Music);
+            RestartSynchronizedTimeline();
+        }
+
         private void ApplyMusicProfile(int levelIndex)
         {
-            activeProfile = musicProfiles != null && levelIndex >= 0 && levelIndex < musicProfiles.Length
+            var profile = musicProfiles != null && levelIndex >= 0 && levelIndex < musicProfiles.Length
                 ? musicProfiles[levelIndex]
                 : null;
+            ApplyMusicProfile(profile);
+        }
+
+        private void ApplyMusicProfile(LevelMusicDefinition profile)
+        {
+            activeProfile = profile;
             if (activeProfile == null)
             {
                 return;

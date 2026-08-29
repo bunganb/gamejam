@@ -28,6 +28,16 @@ namespace GameJam.Gameplay.Tests
             "Assets/Game/Data/Music/LevelMusic_06.asset"
         };
 
+        private static readonly string[] GameLevelPaths =
+        {
+            "Assets/Game/Data/GameLevels/GameLevel_01.asset",
+            "Assets/Game/Data/GameLevels/GameLevel_02.asset",
+            "Assets/Game/Data/GameLevels/GameLevel_03.asset",
+            "Assets/Game/Data/GameLevels/GameLevel_04.asset",
+            "Assets/Game/Data/GameLevels/GameLevel_05.asset",
+            "Assets/Game/Data/GameLevels/GameLevel_06.asset"
+        };
+
         private static readonly string[][] Masks =
         {
             new[] { "111", "111", "111" },
@@ -145,7 +155,11 @@ namespace GameJam.Gameplay.Tests
             var eventHub = root.AddComponent<PuzzleGameplayEvents>();
             var controller = root.AddComponent<PuzzleGameplayController>();
             var loader = root.AddComponent<LevelLoader>();
-            var levels = new[] { LoadLevel(0), LoadLevel(1) };
+            var levels = new GameLevelDefinition[GameLevelPaths.Length];
+            for (var index = 0; index < levels.Length; index++)
+            {
+                levels[index] = LoadGameLevel(index);
+            }
             loader.ConfigureReferences(levels, board, player, controller, eventHub, false);
             var sceneHandle = SceneManager.GetActiveScene().handle;
 
@@ -159,15 +173,36 @@ namespace GameJam.Gameplay.Tests
 
             var endingInvocations = 0;
             loader.GameCompleted += () => endingInvocations++;
+            Assert.That(loader.LoadLevel(levels[^1]), Is.True);
             Assert.That(loader.LoadNextLevel(), Is.False);
             Assert.That(loader.IsEnding, Is.True);
             Assert.That(endingInvocations, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void GameLevelAssets_PairPuzzleAndMusicAndCanLoadDirectly()
+        {
+            for (var index = 0; index < GameLevelPaths.Length; index++)
+            {
+                var gameLevel = LoadGameLevel(index);
+                Assert.That(gameLevel.TryValidate(out var error), Is.True, error);
+                Assert.That(gameLevel.Puzzle, Is.SameAs(LoadLevel(index)));
+                Assert.That(gameLevel.Music, Is.SameAs(AssetDatabase.LoadAssetAtPath<LevelMusicDefinition>(MusicPaths[index])));
+                Assert.That(gameLevel.NextLevel, Is.EqualTo(index + 1 < GameLevelPaths.Length ? LoadGameLevel(index + 1) : null));
+            }
         }
 
         private static LevelDefinition LoadLevel(int index)
         {
             var level = AssetDatabase.LoadAssetAtPath<LevelDefinition>(LevelPaths[index]);
             Assert.That(level, Is.Not.Null, $"Missing level asset: {LevelPaths[index]}");
+            return level;
+        }
+
+        private static GameLevelDefinition LoadGameLevel(int index)
+        {
+            var level = AssetDatabase.LoadAssetAtPath<GameLevelDefinition>(GameLevelPaths[index]);
+            Assert.That(level, Is.Not.Null, $"Missing game level asset: {GameLevelPaths[index]}");
             return level;
         }
 

@@ -5202,12 +5202,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.LevelLoader
   levels:
-  - {fileID: 11400000, guid: a6db450c51c03654396d78acbd843f07, type: 2}
-  - {fileID: 11400000, guid: d245a97fbe186d9479fd244a10859f2f, type: 2}
-  - {fileID: 11400000, guid: e4905719e5d3e784fb24b8996aa09085, type: 2}
-  - {fileID: 11400000, guid: 513f59c73db70384abd41ce116e401cd, type: 2}
-  - {fileID: 11400000, guid: bb35a8a041abccb4b832a8e838b7b31e, type: 2}
-  - {fileID: 11400000, guid: 7c52ec1a00c626b47ada3bf582f70bf9, type: 2}
+  - {fileID: 11400000, guid: 3fb497082f0904c479c2503d3c119e23, type: 2}
+  - {fileID: 11400000, guid: 4accf36a84d412942a7d31719c39eecd, type: 2}
+  - {fileID: 11400000, guid: 82b00825f4c7dbd48aea80de4253b2c3, type: 2}
+  - {fileID: 11400000, guid: c71faebb49109f344bd0e83a58cc13fb, type: 2}
+  - {fileID: 11400000, guid: a8afa18a70e38614982e511ea00f3950, type: 2}
+  - {fileID: 11400000, guid: c945574b57adf24469f7c4761e6c4024, type: 2}
   puzzleBoard: {fileID: 1149668598}
   player: {fileID: 781365219}
   gameplayController: {fileID: 1666553740}

@@ -7,7 +7,7 @@ namespace GameJam.Gameplay
     [DisallowMultipleComponent]
     public sealed class LevelLoader : MonoBehaviour
     {
-        [SerializeField] private LevelDefinition[] levels = Array.Empty<LevelDefinition>();
+        [SerializeField] private GameLevelDefinition[] levels = Array.Empty<GameLevelDefinition>();
         [SerializeField] private PuzzleBoard puzzleBoard;
         [SerializeField] private Transform player;
         [SerializeField] private PuzzleGameplayController gameplayController;
@@ -17,16 +17,17 @@ namespace GameJam.Gameplay
         private Coroutine completionRoutine;
 
         public event Action<int, LevelDefinition> LevelChanged;
+        public event Action<GameLevelDefinition> GameLevelChanged;
         public event Action GameCompleted;
 
         public int CurrentLevelIndex { get; private set; } = -1;
-        public LevelDefinition CurrentLevel =>
-            CurrentLevelIndex >= 0 && CurrentLevelIndex < levels.Length ? levels[CurrentLevelIndex] : null;
+        public GameLevelDefinition CurrentGameLevel { get; private set; }
+        public LevelDefinition CurrentLevel => CurrentGameLevel != null ? CurrentGameLevel.Puzzle : null;
         public bool IsEnding { get; private set; }
         public int LevelCount => levels?.Length ?? 0;
 
         public void ConfigureReferences(
-            LevelDefinition[] levelDefinitions,
+            GameLevelDefinition[] levelDefinitions,
             PuzzleBoard board,
             Transform playerTransform,
             PuzzleGameplayController controller,
@@ -34,7 +35,9 @@ namespace GameJam.Gameplay
             bool autoLoadFirstLevel = true)
         {
             Unsubscribe();
-            levels = levelDefinitions != null ? (LevelDefinition[])levelDefinitions.Clone() : Array.Empty<LevelDefinition>();
+            levels = levelDefinitions != null
+                ? (GameLevelDefinition[])levelDefinitions.Clone()
+                : Array.Empty<GameLevelDefinition>();
             puzzleBoard = board;
             player = playerTransform;
             gameplayController = controller;
@@ -79,21 +82,47 @@ namespace GameJam.Gameplay
                 return false;
             }
 
-            var level = levels[levelIndex];
-            if (!LevelSolutionValidator.TryValidate(level, out var error))
+            return LoadLevelInternal(levels[levelIndex], levelIndex);
+        }
+
+        public bool LoadLevel(GameLevelDefinition gameLevel)
+        {
+            var catalogIndex = levels != null ? Array.IndexOf(levels, gameLevel) : -1;
+            return LoadLevelInternal(gameLevel, catalogIndex);
+        }
+
+        private bool LoadLevelInternal(GameLevelDefinition gameLevel, int catalogIndex)
+        {
+            if (!HasRequiredReferences())
             {
-                Debug.LogError(error, level);
+                Debug.LogError("LevelLoader is missing required references.", this);
                 return false;
             }
+
+            if (gameLevel == null)
+            {
+                Debug.LogError("Game level is missing.", this);
+                return false;
+            }
+
+            if (!gameLevel.TryValidate(out var error))
+            {
+                Debug.LogError(error, gameLevel);
+                return false;
+            }
+
+            var level = gameLevel.Puzzle;
 
             CancelCompletionRoutine();
             IsEnding = false;
             puzzleBoard.BuildBoard(level);
             gameplayController.ConfigureReferences(level, puzzleBoard, player, gameplayEvents);
             gameplayController.Initialize();
-            CurrentLevelIndex = levelIndex;
+            CurrentGameLevel = gameLevel;
+            CurrentLevelIndex = catalogIndex;
             gameplayEvents.PublishChainReset();
             LevelChanged?.Invoke(CurrentLevelIndex, level);
+            GameLevelChanged?.Invoke(gameLevel);
             return true;
         }
 
@@ -104,9 +133,15 @@ namespace GameJam.Gameplay
                 return false;
             }
 
+            if (CurrentGameLevel != null && CurrentGameLevel.NextLevel != null)
+            {
+                return LoadLevel(CurrentGameLevel.NextLevel);
+            }
+
             if (CurrentLevelIndex < 0)
             {
-                return LoadLevel(0);
+                EnterEndingState();
+                return false;
             }
 
             var nextIndex = CurrentLevelIndex + 1;

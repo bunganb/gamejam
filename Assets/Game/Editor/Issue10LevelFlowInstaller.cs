@@ -13,6 +13,7 @@ namespace GameJam.Editor
         private const string ScenePath = "Assets/Game/Scenes/GameplayPrototype.unity";
         private const string LevelFolder = "Assets/Game/Data/Levels";
         private const string MusicFolder = "Assets/Game/Data/Music";
+        private const string GameLevelFolder = "Assets/Game/Data/GameLevels";
         private static readonly string[] LevelPaths =
         {
             LevelFolder + "/Level_01_Prototype.asset",
@@ -33,6 +34,7 @@ namespace GameJam.Editor
 
             var levels = BuildLevels();
             var musicProfiles = BuildMusicProfiles(levels);
+            var gameLevels = BuildGameLevels(levels, musicProfiles);
             var scene = SceneManager.GetSceneByPath(ScenePath);
             var openedAdditively = !scene.IsValid() || !scene.isLoaded;
             if (openedAdditively)
@@ -65,7 +67,7 @@ namespace GameJam.Editor
                 loader = systems.AddComponent<LevelLoader>();
             }
 
-            loader.ConfigureReferences(levels, board, player, controller, eventHub);
+            loader.ConfigureReferences(gameLevels, board, player, controller, eventHub);
             var musicDirector = FindComponent<PrototypeMusicDirector>(scene);
             musicDirector?.ConfigureMusicCatalog(loader, musicProfiles);
             FindComponent<TileBeatSequencer>(scene)?.ConfigureMusicCatalog(loader, musicProfiles);
@@ -247,6 +249,40 @@ namespace GameJam.Editor
             }
 
             return profiles;
+        }
+
+        private static GameLevelDefinition[] BuildGameLevels(
+            IReadOnlyList<LevelDefinition> levels,
+            IReadOnlyList<LevelMusicDefinition> musicProfiles)
+        {
+            EnsureAssetFolder("Assets/Game/Data", "GameLevels");
+            var gameLevels = new GameLevelDefinition[levels.Count];
+            for (var index = 0; index < gameLevels.Length; index++)
+            {
+                var path = $"{GameLevelFolder}/GameLevel_{index + 1:00}.asset";
+                var gameLevel = AssetDatabase.LoadAssetAtPath<GameLevelDefinition>(path);
+                if (gameLevel == null)
+                {
+                    gameLevel = ScriptableObject.CreateInstance<GameLevelDefinition>();
+                    AssetDatabase.CreateAsset(gameLevel, path);
+                }
+
+                gameLevels[index] = gameLevel;
+            }
+
+            for (var index = 0; index < gameLevels.Length; index++)
+            {
+                var nextLevel = index + 1 < gameLevels.Length ? gameLevels[index + 1] : null;
+                gameLevels[index].SetData($"Level {index + 1:00}", levels[index], musicProfiles[index], nextLevel);
+                if (!gameLevels[index].TryValidate(out var error))
+                {
+                    throw new InvalidOperationException(error);
+                }
+
+                EditorUtility.SetDirty(gameLevels[index]);
+            }
+
+            return gameLevels;
         }
 
         private static LevelMusicDefinition BuildMusicProfile(
