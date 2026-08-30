@@ -1,24 +1,42 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using GameJam.Gameplay; // Tambahkan namespace dari LevelDefinition
+using GameJam.Gameplay;
 
 public class LevelButton : MonoBehaviour
 {
-    // Slot untuk menaruh data ScriptableObject yang baru
-    public LevelDefinition myLevelData; 
+    [SerializeField] private GameLevelDefinition myLevelData;
+    [SerializeField] private string gameplaySceneName = "GameplayPrototype";
 
-    // Fungsi ini yang akan dipanggil saat tombol/nisan diklik
+    public GameLevelDefinition Level => myLevelData;
+
+    public void Configure(GameLevelDefinition level, string sceneName = "GameplayPrototype")
+    {
+        myLevelData = level;
+        gameplaySceneName = sceneName;
+    }
+
     public void LoadThisLevel()
     {
-        // Mengecek apakah data sudah diisi dan LevelId tidak kosong
-        if(myLevelData != null && !string.IsNullOrEmpty(myLevelData.LevelId))
+        if (myLevelData == null)
         {
-            Debug.Log("Membuka scene: " + myLevelData.LevelId);
-            SceneManager.LoadScene(myLevelData.LevelId); // Menggunakan LevelId sebagai nama scene
+            Debug.LogWarning("Data level belum di-assign.", this);
+            return;
         }
-        else
+
+        if (!myLevelData.TryValidate(out var error))
         {
-            Debug.LogWarning("Data level belum dimasukkan atau nama LevelId kosong!");
+            Debug.LogWarning($"Data level belum valid: {error}", this);
+            return;
         }
+
+        if (string.IsNullOrWhiteSpace(gameplaySceneName))
+        {
+            Debug.LogWarning("Nama scene gameplay belum diisi.", this);
+            return;
+        }
+
+        Debug.Log($"Membuka {gameplaySceneName} dengan {myLevelData.LevelId}");
+        LevelSelectionSession.Select(myLevelData);
+        SceneManager.LoadScene(gameplaySceneName);
     }
 }
