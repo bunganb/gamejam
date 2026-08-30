@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -189,6 +190,78 @@ namespace GameJam.Gameplay.Tests
                 Assert.That(gameLevel.Puzzle, Is.SameAs(LoadLevel(index)));
                 Assert.That(gameLevel.Music, Is.SameAs(AssetDatabase.LoadAssetAtPath<LevelMusicDefinition>(MusicPaths[index])));
                 Assert.That(gameLevel.NextLevel, Is.EqualTo(index + 1 < GameLevelPaths.Length ? LoadGameLevel(index + 1) : null));
+            }
+        }
+
+        [Test]
+        public void LevelSelectionSession_ConsumesSelectedGameLevelOnlyOnce()
+        {
+            var selected = LoadGameLevel(3);
+            LevelSelectionSession.Clear();
+            LevelSelectionSession.Select(selected);
+
+            Assert.That(LevelSelectionSession.HasSelection, Is.True);
+            Assert.That(LevelSelectionSession.TryConsume(out var consumed), Is.True);
+            Assert.That(consumed, Is.SameAs(selected));
+            Assert.That(LevelSelectionSession.HasSelection, Is.False);
+            Assert.That(LevelSelectionSession.TryConsume(out _), Is.False);
+        }
+
+        [Test]
+        public void MainMenu_LevelButtonsUseGameLevelPackagesAndSharedGameplaySceneIsBuildable()
+        {
+            const string mainMenuPath = "Assets/Game/Scenes/MainMenu.unity";
+            const string gameplayPath = "Assets/Game/Scenes/GameplayPrototype.unity";
+            var scene = SceneManager.GetSceneByPath(mainMenuPath);
+            var openedForTest = !scene.IsValid() || !scene.isLoaded;
+
+            if (openedForTest)
+            {
+                scene = EditorSceneManager.OpenScene(mainMenuPath, OpenSceneMode.Additive);
+            }
+
+            try
+            {
+                Transform levelSelect = null;
+                foreach (var root in scene.GetRootGameObjects())
+                {
+                    foreach (var child in root.GetComponentsInChildren<Transform>(true))
+                    {
+                        if (child.name == "LevelSelect")
+                        {
+                            levelSelect = child;
+                            break;
+                        }
+                    }
+
+                    if (levelSelect != null)
+                    {
+                        break;
+                    }
+                }
+
+                Assert.That(levelSelect, Is.Not.Null);
+                for (var levelNumber = 1; levelNumber <= GameLevelPaths.Length; levelNumber++)
+                {
+                    var buttonTransform = levelSelect.Find($"lvl{levelNumber}");
+                    Assert.That(buttonTransform, Is.Not.Null, $"Missing lvl{levelNumber} under LevelSelect.");
+                    var levelButton = buttonTransform.GetComponent<global::LevelButton>();
+                    Assert.That(levelButton, Is.Not.Null);
+                    Assert.That(levelButton.Level, Is.SameAs(LoadGameLevel(levelNumber - 1)));
+                }
+
+                var gameplayBuildScene = System.Array.Find(
+                    EditorBuildSettings.scenes,
+                    buildScene => buildScene.path == gameplayPath);
+                Assert.That(gameplayBuildScene, Is.Not.Null);
+                Assert.That(gameplayBuildScene.enabled, Is.True);
+            }
+            finally
+            {
+                if (openedForTest)
+                {
+                    EditorSceneManager.CloseScene(scene, true);
+                }
             }
         }
 

@@ -58,7 +58,14 @@ namespace GameJam.Gameplay
         {
             if (loadFirstLevelOnStart && CurrentLevelIndex < 0)
             {
-                LoadLevel(0);
+                if (LevelSelectionSession.TryConsume(out var selectedLevel))
+                {
+                    LoadLevel(selectedLevel);
+                }
+                else
+                {
+                    LoadLevel(0);
+                }
             }
         }
 
