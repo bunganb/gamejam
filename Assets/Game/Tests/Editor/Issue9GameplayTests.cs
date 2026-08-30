@@ -7,6 +7,23 @@ namespace GameJam.Gameplay.Tests
     public sealed class Issue9GameplayTests
     {
         [Test]
+        public void ScreenInputMapping_WAndSMatchVisualBoardDirection()
+        {
+            Assert.That(
+                PuzzleGameplayController.ScreenInputToBoardDirection(Vector2Int.up),
+                Is.EqualTo(Vector2Int.down));
+            Assert.That(
+                PuzzleGameplayController.ScreenInputToBoardDirection(Vector2Int.down),
+                Is.EqualTo(Vector2Int.up));
+            Assert.That(
+                PuzzleGameplayController.ScreenInputToBoardDirection(Vector2Int.left),
+                Is.EqualTo(Vector2Int.left));
+            Assert.That(
+                PuzzleGameplayController.ScreenInputToBoardDirection(Vector2Int.right),
+                Is.EqualTo(Vector2Int.right));
+        }
+
+        [Test]
         public void BeatColor_CyclesMagentaBlueYellowMagenta()
         {
             Assert.That(BeatColor.Magenta.Next(), Is.EqualTo(BeatColor.Blue));
