@@ -266,30 +266,38 @@ namespace GameJam.Gameplay
         {
             if (keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame)
             {
-                direction = Vector2Int.up;
+                direction = ScreenInputToBoardDirection(Vector2Int.up);
                 return true;
             }
 
             if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame)
             {
-                direction = Vector2Int.down;
+                direction = ScreenInputToBoardDirection(Vector2Int.down);
                 return true;
             }
 
             if (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame)
             {
-                direction = Vector2Int.left;
+                direction = ScreenInputToBoardDirection(Vector2Int.left);
                 return true;
             }
 
             if (keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame)
             {
-                direction = Vector2Int.right;
+                direction = ScreenInputToBoardDirection(Vector2Int.right);
                 return true;
             }
 
             direction = Vector2Int.zero;
             return false;
+        }
+
+        public static Vector2Int ScreenInputToBoardDirection(Vector2Int screenDirection)
+        {
+            // Board rows increase toward the bottom of the screen because row zero is
+            // placed on positive world Z. Convert screen-space vertical input once here
+            // so W/up always looks upward without rewriting authored level coordinates.
+            return new Vector2Int(screenDirection.x, -screenDirection.y);
         }
 
         private static bool IsOrthogonalUnit(Vector2Int direction)
