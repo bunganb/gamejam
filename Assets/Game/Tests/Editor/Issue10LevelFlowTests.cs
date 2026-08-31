@@ -115,7 +115,7 @@ namespace GameJam.Gameplay.Tests
                 Assert.That(music, Is.Not.Null, $"Missing music profile: {MusicPaths[levelIndex]}");
                 Assert.That(music.LevelId, Is.EqualTo(level.LevelId));
                 Assert.That(music.TryValidate(level.TotalNotes, out var error), Is.True, error);
-                Assert.That(music.BuildLayerThreshold, Is.EqualTo(.8f).Within(.0001f));
+                Assert.That(music.BuildLayerRemainingNotes, Is.EqualTo(1));
                 Assert.That(music.TileFadeInDuration, Is.EqualTo(.06f).Within(.0001f));
                 Assert.That(music.LoopEntryDelayBeats, Is.EqualTo(.5f).Within(.0001f));
                 Assert.That(music.SubdivisionsPerBeat, Is.EqualTo(levelIndex == 0 ? 2 : 4));

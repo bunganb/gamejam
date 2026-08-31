@@ -24,6 +24,40 @@ namespace GameJam.Gameplay.Tests
         }
 
         [Test]
+        public void McFacingMapping_UsesPhysicalTileDirection()
+        {
+            Assert.That(
+                McLegacyAnimationPresenter.BoardDirectionToWorld(Vector2Int.right),
+                Is.EqualTo(Vector3.right));
+            Assert.That(
+                McLegacyAnimationPresenter.BoardDirectionToWorld(Vector2Int.left),
+                Is.EqualTo(Vector3.left));
+            Assert.That(
+                McLegacyAnimationPresenter.BoardDirectionToWorld(Vector2Int.up),
+                Is.EqualTo(Vector3.back));
+            Assert.That(
+                McLegacyAnimationPresenter.BoardDirectionToWorld(Vector2Int.down),
+                Is.EqualTo(Vector3.forward));
+        }
+
+        [Test]
+        public void MovementDuration_CanSynchronizeToAuthoredJumpClip()
+        {
+            var controllerObject = new GameObject("MovementDurationController");
+            try
+            {
+                var controller = controllerObject.AddComponent<PuzzleGameplayController>();
+                controller.SetMovementDuration(1.667f);
+
+                Assert.That(controller.MovementDuration, Is.EqualTo(1.667f).Within(0.0001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(controllerObject);
+            }
+        }
+
+        [Test]
         public void BeatColor_CyclesMagentaBlueYellowMagenta()
         {
             Assert.That(BeatColor.Magenta.Next(), Is.EqualTo(BeatColor.Blue));
@@ -201,16 +235,22 @@ namespace GameJam.Gameplay.Tests
         }
 
         [Test]
-        public void EarlyBass_UnlocksAtFirstLevelOneStepAboveEightyPercent()
+        public void Bass_UnlocksOnlyWhenOneNoteRemainsBeforeCompletion()
         {
             Assert.That(
-                PrototypeMusicDirector.ShouldUnlockBassEarly(8f / 11f, 0.80f, false, false),
+                PrototypeMusicDirector.ShouldUnlockBassWithRemainingNotes(8, 11, 1, false),
                 Is.False);
             Assert.That(
-                PrototypeMusicDirector.ShouldUnlockBassEarly(9f / 11f, 0.80f, false, false),
+                PrototypeMusicDirector.ShouldUnlockBassWithRemainingNotes(9, 11, 1, false),
+                Is.False);
+            Assert.That(
+                PrototypeMusicDirector.ShouldUnlockBassWithRemainingNotes(10, 11, 1, false),
                 Is.True);
             Assert.That(
-                PrototypeMusicDirector.ShouldUnlockBassEarly(9f / 11f, 0.80f, false, true),
+                PrototypeMusicDirector.ShouldUnlockBassWithRemainingNotes(10, 11, 1, true),
+                Is.False);
+            Assert.That(
+                PrototypeMusicDirector.ShouldUnlockBassWithRemainingNotes(11, 11, 1, false),
                 Is.False);
         }
 

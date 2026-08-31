@@ -28,6 +28,12 @@ namespace GameJam.Gameplay
         public Vector2Int CurrentCoordinate => currentCoordinate;
         public ObjectiveProgressTracker ProgressTracker => progressTracker;
         public LevelDefinition Level => level;
+        public float MovementDuration => movementDuration;
+
+        public void SetMovementDuration(float duration)
+        {
+            movementDuration = Mathf.Max(0.01f, duration);
+        }
 
         public void ConfigureReferences(
             LevelDefinition levelDefinition,

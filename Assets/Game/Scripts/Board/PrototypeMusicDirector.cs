@@ -19,7 +19,7 @@ namespace GameJam.Gameplay
         [SerializeField, Min(0)] private int sampleSequencerLevelIndex;
         [SerializeField, Min(0f)] private float layerFadeDuration = 0.12f;
         [SerializeField, Min(0f)] private float bassFadeInDuration = 0.45f;
-        [SerializeField, Range(0f, 1f)] private float earlyBassProgress = 0.80f;
+        [SerializeField, Min(1)] private int bassUnlockRemainingNotes = 1;
         [SerializeField, Min(0f)] private float earlyBassFadeInDuration = 0.75f;
         [SerializeField, Min(0f)] private float bassHoldDuration = 0.35f;
         [SerializeField, Min(0f)] private float fullSongCrossfadeDuration = 1.15f;
@@ -72,11 +72,11 @@ namespace GameJam.Gameplay
         }
 
         public void ConfigureFullSongTransition(
-            float bassProgress,
+            int bassRemainingNotes,
             float bassFadeDuration,
             float crossfadeDuration)
         {
-            earlyBassProgress = Mathf.Clamp01(bassProgress);
+            bassUnlockRemainingNotes = Mathf.Max(1, bassRemainingNotes);
             earlyBassFadeInDuration = Mathf.Max(0f, bassFadeDuration);
             fullSongCrossfadeDuration = Mathf.Max(0f, crossfadeDuration);
         }
@@ -176,7 +176,11 @@ namespace GameJam.Gameplay
                 }
 
                 if (!bassUnlocked && activeProfile.BuildLayer != null &&
-                    snapshot.NormalizedProgress >= activeProfile.BuildLayerThreshold)
+                    ShouldUnlockBassWithRemainingNotes(
+                        snapshot.MatchedTotal,
+                        snapshot.TotalNotes,
+                        activeProfile.BuildLayerRemainingNotes,
+                        bassUnlocked))
                 {
                     bassUnlocked = true;
                     StartCoroutine(FadeSourceOnNextGrid(bassSource, earlyBassFadeInDuration));
@@ -187,10 +191,10 @@ namespace GameJam.Gameplay
 
             if (!progressiveStemLayersEnabled)
             {
-                if (ShouldUnlockBassEarly(
-                        snapshot.NormalizedProgress,
-                        earlyBassProgress,
-                        progressiveStemLayersEnabled,
+                if (ShouldUnlockBassWithRemainingNotes(
+                        snapshot.MatchedTotal,
+                        snapshot.TotalNotes,
+                        bassUnlockRemainingNotes,
                         bassUnlocked))
                 {
                     bassUnlocked = true;
@@ -210,14 +214,15 @@ namespace GameJam.Gameplay
             StartCoroutine(FadeSourceOnNextGrid(GetBeatSource(layerIndex)));
         }
 
-        public static bool ShouldUnlockBassEarly(
-            float normalizedProgress,
-            float unlockThreshold,
-            bool progressiveLayersEnabled,
+        public static bool ShouldUnlockBassWithRemainingNotes(
+            int matchedNotes,
+            int totalNotes,
+            int unlockRemainingNotes,
             bool alreadyUnlocked)
         {
-            return !progressiveLayersEnabled && !alreadyUnlocked &&
-                   normalizedProgress >= Mathf.Clamp01(unlockThreshold);
+            var remainingNotes = totalNotes - matchedNotes;
+            return !alreadyUnlocked && totalNotes > 0 &&
+                   remainingNotes > 0 && remainingNotes <= Mathf.Max(1, unlockRemainingNotes);
         }
 
         private void HandleChainReset()
