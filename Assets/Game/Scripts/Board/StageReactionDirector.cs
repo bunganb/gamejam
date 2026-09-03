@@ -11,6 +11,7 @@ namespace GameJam.Gameplay
         [SerializeField] private StageReactionProfile profile;
         [SerializeField] private StageRingPresenter stageRing;
         [SerializeField] private AudienceReactionPresenter audience;
+        [SerializeField] private StageBaseLightingPresenter baseLighting;
         [SerializeField] private DiscoSpotlightRig spotlights;
         [SerializeField] private Volume reactionVolume;
 
@@ -38,11 +39,31 @@ namespace GameJam.Gameplay
             DiscoSpotlightRig spotlightPresenter,
             Volume volume)
         {
+            ConfigureReferences(
+                events,
+                reactionProfile,
+                ringPresenter,
+                audiencePresenter,
+                null,
+                spotlightPresenter,
+                volume);
+        }
+
+        public void ConfigureReferences(
+            PuzzleGameplayEvents events,
+            StageReactionProfile reactionProfile,
+            StageRingPresenter ringPresenter,
+            AudienceReactionPresenter audiencePresenter,
+            StageBaseLightingPresenter baseLightingPresenter,
+            DiscoSpotlightRig spotlightPresenter,
+            Volume volume)
+        {
             Unsubscribe();
             eventHub = events;
             profile = reactionProfile;
             stageRing = ringPresenter;
             audience = audiencePresenter;
+            baseLighting = baseLightingPresenter;
             spotlights = spotlightPresenter;
             reactionVolume = volume;
             CacheBloom();
@@ -54,6 +75,19 @@ namespace GameJam.Gameplay
         {
             CacheBloom();
             Subscribe();
+        }
+
+        private void Start()
+        {
+            if (audience == null)
+            {
+                Debug.LogWarning("StageReactionDirector has no audience presenter; crowd reactions are disabled.", this);
+            }
+
+            if (reactionVolume == null || bloom == null || colorAdjustments == null)
+            {
+                Debug.LogWarning("StageReactionDirector requires a reaction volume with Bloom and Color Adjustments.", this);
+            }
         }
 
         private void OnDisable() => Unsubscribe();
@@ -203,6 +237,7 @@ namespace GameJam.Gameplay
             var energy = Mathf.Clamp01(visualProgress);
             stageRing?.Apply(visualProgress, energy, beatPulse, rowPulse, failurePulse);
             audience?.Apply(State, energy, beatPulse, rowPulse, failurePulse);
+            baseLighting?.Apply(State, energy, beatPulse, rowPulse, failurePulse);
             if (bloom != null && profile != null)
             {
                 var fullWeight = State == StageReactionState.FullGroove ? energy : energy * 0.35f;

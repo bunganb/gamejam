@@ -7,6 +7,7 @@ namespace GameJam.Gameplay
     public sealed class AudienceReactionPresenter : MonoBehaviour
     {
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int ReactionEnergyId = Shader.PropertyToID("_ReactionEnergy");
         private static readonly int BeatPulseId = Shader.PropertyToID("_BeatPulse");
         private static readonly int RowCompletePulseId = Shader.PropertyToID("_RowCompletePulse");
@@ -20,8 +21,6 @@ namespace GameJam.Gameplay
 
         [SerializeField] private Transform[] members;
         [SerializeField] private StageReactionProfile profile;
-        [SerializeField] private Color baseColor = new Color(0.72f, 0.82f, 1f);
-
         private MemberCache[] cache;
         private MaterialPropertyBlock propertyBlock;
         private float energy;
@@ -29,6 +28,8 @@ namespace GameJam.Gameplay
         private float rowPulse;
         private float failurePulse;
         private StageReactionState state;
+
+        public int ReactiveRendererCount { get; private set; }
 
         public void ConfigureReferences(Transform[] audienceMembers, StageReactionProfile reactionProfile)
         {
@@ -111,9 +112,15 @@ namespace GameJam.Gameplay
                     BasePosition = member != null ? member.localPosition : Vector3.zero,
                     BaseRotation = member != null ? member.localRotation : Quaternion.identity,
                     BaseScale = member != null ? member.localScale : Vector3.one,
-                    Renderers = member != null ? member.GetComponentsInChildren<Renderer>(true) : Array.Empty<Renderer>(),
+                    Renderers = BuildRendererCache(member),
                     Animator = member != null ? member.GetComponentInChildren<Animator>(true) : null
                 };
+            }
+
+            ReactiveRendererCount = 0;
+            foreach (var member in cache)
+            {
+                ReactiveRendererCount += member.Renderers.Length;
             }
         }
 
@@ -127,28 +134,27 @@ namespace GameJam.Gameplay
             propertyBlock ??= new MaterialPropertyBlock();
             foreach (var member in cache)
             {
-                foreach (var targetRenderer in member.Renderers)
+                foreach (var rendererCache in member.Renderers)
                 {
+                    var targetRenderer = rendererCache.Renderer;
                     if (targetRenderer == null)
                     {
                         continue;
                     }
 
-                    var material = targetRenderer.sharedMaterial;
-                    if (material == null || !material.HasProperty(ReactionEnergyId))
-                    {
-                        continue;
-                    }
-
                     targetRenderer.GetPropertyBlock(propertyBlock);
-                    if (material.HasProperty(BaseColorId))
+                    if (rendererCache.SupportsReactionShader)
                     {
-                        propertyBlock.SetColor(BaseColorId, baseColor);
+                        propertyBlock.SetColor(BaseColorId, rendererCache.BaselineColor);
+                        propertyBlock.SetFloat(ReactionEnergyId, energy);
+                        propertyBlock.SetFloat(BeatPulseId, beatPulse);
+                        propertyBlock.SetFloat(RowCompletePulseId, rowPulse);
+                        propertyBlock.SetFloat(FailurePulseId, failurePulse);
                     }
-                    propertyBlock.SetFloat(ReactionEnergyId, energy);
-                    propertyBlock.SetFloat(BeatPulseId, beatPulse);
-                    propertyBlock.SetFloat(RowCompletePulseId, rowPulse);
-                    propertyBlock.SetFloat(FailurePulseId, failurePulse);
+                    else if (rendererCache.ColorPropertyId != 0)
+                    {
+                        propertyBlock.SetColor(rendererCache.ColorPropertyId, EvaluateFallbackColor(rendererCache.BaselineColor));
+                    }
                     targetRenderer.SetPropertyBlock(propertyBlock);
                 }
 
@@ -181,7 +187,82 @@ namespace GameJam.Gameplay
                 member.Transform.localPosition = member.BasePosition;
                 member.Transform.localRotation = member.BaseRotation;
                 member.Transform.localScale = member.BaseScale;
+
+                foreach (var rendererCache in member.Renderers)
+                {
+                    if (rendererCache.Renderer == null || rendererCache.ColorPropertyId == 0)
+                    {
+                        continue;
+                    }
+
+                    propertyBlock ??= new MaterialPropertyBlock();
+                    rendererCache.Renderer.GetPropertyBlock(propertyBlock);
+                    propertyBlock.SetColor(rendererCache.ColorPropertyId, rendererCache.BaselineColor);
+                    if (rendererCache.SupportsReactionShader)
+                    {
+                        propertyBlock.SetFloat(ReactionEnergyId, 0f);
+                        propertyBlock.SetFloat(BeatPulseId, 0f);
+                        propertyBlock.SetFloat(RowCompletePulseId, 0f);
+                        propertyBlock.SetFloat(FailurePulseId, 0f);
+                    }
+                    rendererCache.Renderer.SetPropertyBlock(propertyBlock);
+                }
             }
+        }
+
+        private Color EvaluateFallbackColor(Color original)
+        {
+            const float minimumLuminance = 0.001f;
+            var grooveTint = Color.Lerp(
+                original,
+                new Color(0.72f, 0.48f, 1f, original.a),
+                Mathf.Clamp01(energy) * 0.12f);
+            var luminanceScale = original.grayscale / Mathf.Max(minimumLuminance, grooveTint.grayscale);
+            grooveTint = new Color(
+                grooveTint.r * luminanceScale,
+                grooveTint.g * luminanceScale,
+                grooveTint.b * luminanceScale,
+                original.a);
+            var brightness = 1f
+                + Mathf.Clamp01(energy) * 0.02f
+                + Mathf.Clamp01(beatPulse) * 0.03f
+                + Mathf.Clamp01(rowPulse) * 0.05f;
+            var energized = new Color(
+                grooveTint.r * brightness,
+                grooveTint.g * brightness,
+                grooveTint.b * brightness,
+                original.a);
+            return Color.Lerp(energized, new Color(0.18f, 0.04f, 0.24f, original.a), failurePulse * 0.75f);
+        }
+
+        private static RendererCache[] BuildRendererCache(Transform member)
+        {
+            if (member == null)
+            {
+                return Array.Empty<RendererCache>();
+            }
+
+            var renderers = member.GetComponentsInChildren<Renderer>(true);
+            var result = new RendererCache[renderers.Length];
+            for (var index = 0; index < renderers.Length; index++)
+            {
+                var renderer = renderers[index];
+                var material = renderer != null ? renderer.sharedMaterial : null;
+                var supportsReaction = material != null && material.HasProperty(ReactionEnergyId);
+                var colorPropertyId = material != null && material.HasProperty(BaseColorId)
+                    ? BaseColorId
+                    : material != null && material.HasProperty(ColorId) ? ColorId : 0;
+                var baselineColor = colorPropertyId != 0 ? material.GetColor(colorPropertyId) : Color.white;
+                result[index] = new RendererCache
+                {
+                    Renderer = renderer,
+                    SupportsReactionShader = supportsReaction,
+                    ColorPropertyId = colorPropertyId,
+                    BaselineColor = baselineColor
+                };
+            }
+
+            return result;
         }
 
         private static void SetAnimatorFloatIfPresent(Animator animator, int id, float value)
@@ -231,8 +312,16 @@ namespace GameJam.Gameplay
             public Vector3 BasePosition;
             public Quaternion BaseRotation;
             public Vector3 BaseScale;
-            public Renderer[] Renderers;
+            public RendererCache[] Renderers;
             public Animator Animator;
+        }
+
+        private struct RendererCache
+        {
+            public Renderer Renderer;
+            public bool SupportsReactionShader;
+            public int ColorPropertyId;
+            public Color BaselineColor;
         }
     }
 }
