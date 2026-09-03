@@ -55,6 +55,7 @@ public class Settings : MonoBehaviour
 
         // Menyimpan pengaturan (1 untuk true, 0 untuk false)
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     private void UpdateMasterValue(float value)

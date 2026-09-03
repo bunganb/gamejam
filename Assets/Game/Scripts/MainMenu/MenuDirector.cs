@@ -82,4 +82,9 @@ public class MenuDirector : MonoBehaviour
             director.playableGraph.GetRootPlayable(0).SetSpeed(-1); 
         }
     }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
 }
