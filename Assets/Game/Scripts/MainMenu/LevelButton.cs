@@ -6,13 +6,18 @@ public class LevelButton : MonoBehaviour
 {
     [SerializeField] private GameLevelDefinition myLevelData;
     [SerializeField] private string gameplaySceneName = "GameplayPrototype";
+    [SerializeField] private string loadingSceneName = "Loading";
 
     public GameLevelDefinition Level => myLevelData;
 
-    public void Configure(GameLevelDefinition level, string sceneName = "GameplayPrototype")
+    public void Configure(
+        GameLevelDefinition level,
+        string sceneName = "GameplayPrototype",
+        string loadingScene = "Loading")
     {
         myLevelData = level;
         gameplaySceneName = sceneName;
+        loadingSceneName = loadingScene;
     }
 
     public void LoadThisLevel()
@@ -35,8 +40,15 @@ public class LevelButton : MonoBehaviour
             return;
         }
 
-        Debug.Log($"Membuka {gameplaySceneName} dengan {myLevelData.LevelId}");
+        if (string.IsNullOrWhiteSpace(loadingSceneName))
+        {
+            Debug.LogWarning("Nama scene loading belum diisi.", this);
+            return;
+        }
+
+        Debug.Log($"Membuka {myLevelData.LevelId} melalui {loadingSceneName} menuju {gameplaySceneName}");
         LevelSelectionSession.Select(myLevelData);
-        SceneManager.LoadScene(gameplaySceneName);
+        LoaderUtils.SetTargetScene(gameplaySceneName);
+        SceneManager.LoadScene(loadingSceneName);
     }
 }
