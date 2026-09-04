@@ -4,8 +4,8 @@
   <Project Path="Timeline.Samples.Annotation.Editor.csproj" />
   <Project Path="Timeline.Samples.Tween.csproj" />
   <Project Path="Timeline.Samples.Text.csproj" />
-  <Project Path="Timeline.Samples.Text.Editor.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="Timeline.Samples.Text.Editor.csproj" />
   <Project Path="Timeline.Samples.Utilities.Editor.csproj" />
   <Project Path="Timeline.Samples.TimeDilation.csproj" />
   <Project Path="Timeline.Samples.Utilities.csproj" />
