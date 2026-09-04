@@ -69,7 +69,7 @@ namespace GameJam.Editor
             musicDirector.ConfigureReferences(eventHub, harmony, drumKick, ketipungOne, ketipungTwo, bass, fullSong);
             var levelLoader = systems.GetComponent<LevelLoader>();
             musicDirector.ConfigureSampleSequencerScope(levelLoader, 0);
-            musicDirector.ConfigureFullSongTransition(0.80f, 0.75f, 1.15f);
+            musicDirector.ConfigureFullSongTransition(1, 0.75f, 1.15f);
             var sequencer = GetOrAdd<TileBeatSequencer>(musicRoot.gameObject);
             sequencer.ConfigureReferences(
                 eventHub,

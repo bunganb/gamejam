@@ -296,9 +296,12 @@ MonoBehaviour:
   tileCollider: {fileID: 6584808500665132451}
   playerStandPoint: {fileID: 3293623273978697534}
   vfxPoint: {fileID: 272287463898281760}
-  magentaColor: {r: 1, g: 0.05, b: 0.55, a: 1}
-  blueColor: {r: 0.05, g: 0.45, b: 1, a: 1}
-  yellowColor: {r: 1, g: 0.75, b: 0.05, a: 1}
+  magentaColor: {r: 0.8, g: 0.03, b: 0.4, a: 1}
+  blueColor: {r: 0.03, g: 0.3, b: 0.75, a: 1}
+  yellowColor: {r: 0.8, g: 0.5, b: 0.03, a: 1}
+  inactiveColor: {r: 0.1, g: 0.055, b: 0.18, a: 1}
+  activeEmissionMultiplier: 1.8
+  inactiveEmissionMultiplier: 0.02
 --- !u!65 &6584808500665132451
 BoxCollider:
   m_ObjectHideFlags: 0

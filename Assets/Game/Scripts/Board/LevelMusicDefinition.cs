@@ -15,7 +15,7 @@ namespace GameJam.Gameplay
         [SerializeField] private AudioClip secondaryLayer;
         [SerializeField, Range(0f, 1f)] private float secondaryLayerThreshold = 1f;
         [SerializeField] private AudioClip buildLayer;
-        [SerializeField, Range(0f, 1f)] private float buildLayerThreshold = 0.8f;
+        [SerializeField, Min(1)] private int buildLayerRemainingNotes = 1;
         [SerializeField] private AudioClip topLoopLayer;
         [SerializeField, Min(-1)] private int topLoopUnlockRow = -1;
         [SerializeField] private AudioClip fullSong;
@@ -33,7 +33,7 @@ namespace GameJam.Gameplay
         public AudioClip SecondaryLayer => secondaryLayer;
         public float SecondaryLayerThreshold => secondaryLayerThreshold;
         public AudioClip BuildLayer => buildLayer;
-        public float BuildLayerThreshold => buildLayerThreshold;
+        public int BuildLayerRemainingNotes => buildLayerRemainingNotes;
         public AudioClip TopLoopLayer => topLoopLayer;
         public int TopLoopUnlockRow => topLoopUnlockRow;
         public AudioClip FullSong => fullSong;
@@ -53,7 +53,7 @@ namespace GameJam.Gameplay
             AudioClip secondary,
             float secondaryThreshold,
             AudioClip build,
-            float buildThreshold,
+            int buildRemainingNotes,
             AudioClip topLoop,
             int topLoopRow,
             AudioClip completeSong,
@@ -71,7 +71,7 @@ namespace GameJam.Gameplay
             secondaryLayer = secondary;
             secondaryLayerThreshold = Mathf.Clamp01(secondaryThreshold);
             buildLayer = build;
-            buildLayerThreshold = Mathf.Clamp01(buildThreshold);
+            buildLayerRemainingNotes = Mathf.Max(1, buildRemainingNotes);
             topLoopLayer = topLoop;
             topLoopUnlockRow = Mathf.Max(-1, topLoopRow);
             fullSong = completeSong;

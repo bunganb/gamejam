@@ -327,7 +327,7 @@ namespace GameJam.Editor
                 OptionalAudioClip(secondaryPath),
                 secondaryThreshold,
                 OptionalAudioClip(buildPath),
-                .8f,
+                1,
                 OptionalAudioClip(topLoopPath),
                 topLoopRow,
                 RequireAudioClip("Assets/Game/Art/Beat/" + fullSongPath),

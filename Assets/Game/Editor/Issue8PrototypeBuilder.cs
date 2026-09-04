@@ -362,7 +362,7 @@ namespace GameJam.Editor
             var director = musicRoot.gameObject.AddComponent<PrototypeMusicDirector>();
             director.ConfigureReferences(eventHub, harmony, drumKick, ketipungOne, ketipungTwo, bass, fullSong);
             director.ConfigureSampleSequencerScope(null, 0);
-            director.ConfigureFullSongTransition(0.80f, 0.75f, 1.15f);
+            director.ConfigureFullSongTransition(1, 0.75f, 1.15f);
             var sequencer = musicRoot.gameObject.AddComponent<TileBeatSequencer>();
             sequencer.ConfigureReferences(
                 eventHub,

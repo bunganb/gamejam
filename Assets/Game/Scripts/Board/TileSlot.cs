@@ -14,10 +14,12 @@ namespace GameJam.Gameplay
         [SerializeField] private BoxCollider tileCollider;
         [SerializeField] private Transform playerStandPoint;
         [SerializeField] private Transform vfxPoint;
-        [SerializeField] private Color magentaColor = new(1f, 0.05f, 0.55f, 1f);
-        [SerializeField] private Color blueColor = new(0.05f, 0.45f, 1f, 1f);
-        [SerializeField] private Color yellowColor = new(1f, 0.75f, 0.05f, 1f);
+        [SerializeField] private Color magentaColor = new(0.8f, 0.03f, 0.4f, 1f);
+        [SerializeField] private Color blueColor = new(0.03f, 0.3f, 0.75f, 1f);
+        [SerializeField] private Color yellowColor = new(0.8f, 0.5f, 0.03f, 1f);
         [SerializeField] private Color inactiveColor = new(0.1f, 0.055f, 0.18f, 1f);
+        [SerializeField, Min(0f)] private float activeEmissionMultiplier = 1.8f;
+        [SerializeField, Min(0f)] private float inactiveEmissionMultiplier = 0.02f;
 
         private MaterialPropertyBlock propertyBlock;
         private BeatColor initialColor;
@@ -109,7 +111,8 @@ namespace GameJam.Gameplay
             surfaceRenderer.GetPropertyBlock(propertyBlock);
             var displayColor = isActiveCell ? GetDisplayColor(color) : inactiveColor;
             propertyBlock.SetColor(BaseColorId, displayColor);
-            propertyBlock.SetColor(EmissionColorId, isActiveCell ? displayColor * 1.5f : displayColor * 0.08f);
+            var emissionMultiplier = isActiveCell ? activeEmissionMultiplier : inactiveEmissionMultiplier;
+            propertyBlock.SetColor(EmissionColorId, displayColor * emissionMultiplier);
             surfaceRenderer.SetPropertyBlock(propertyBlock);
         }
 
