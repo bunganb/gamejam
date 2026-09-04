@@ -11,6 +11,7 @@ namespace GameJam.Editor
     public static class MainMenuLevelSelectInstaller
     {
         private const string MainMenuScenePath = "Assets/Game/Scenes/MainMenu.unity";
+        private const string LoadingScenePath = "Assets/Game/Scenes/Loading.unity";
         private const string GameplayScenePath = "Assets/Game/Scenes/GameplayPrototype.unity";
         private const string GameLevelRoot = "Assets/Game/Data/GameLevels/GameLevel_";
 
@@ -56,6 +57,7 @@ namespace GameJam.Editor
             }
 
             EnsureBuildScene(MainMenuScenePath);
+            EnsureBuildScene(LoadingScenePath);
             EnsureBuildScene(GameplayScenePath);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, MainMenuScenePath);
@@ -66,7 +68,7 @@ namespace GameJam.Editor
                 EditorSceneManager.CloseScene(scene, true);
             }
 
-            Debug.Log("MAIN_MENU_LEVEL_SELECT_INSTALL_COMPLETE: lvl1-lvl6 use GameLevelDefinition and load GameplayPrototype.");
+            Debug.Log("MAIN_MENU_LEVEL_SELECT_INSTALL_COMPLETE: lvl1-lvl6 use Loading before GameplayPrototype.");
         }
 
         private static void EnsureBuildScene(string scenePath)
