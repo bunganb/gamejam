@@ -1,5 +1,8 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace GameJam.Gameplay
@@ -16,6 +19,10 @@ namespace GameJam.Gameplay
         [SerializeField] private Color fadeColor = Color.black;
         [SerializeField] private int sortingOrder = 10000;
         [SerializeField, Range(0f, 0.15f)] private float bounceAmount = 0.045f;
+        [SerializeField, Range(0f, 0.5f)] private float closedRadius = 0.12f;
+        [SerializeField] private TMP_FontAsset finaleFont;
+        [SerializeField, Min(0.01f)] private float finaleBlinkSpeed = 2.5f;
+        [SerializeField, Range(0f, 1f)] private float finaleBlinkMinAlpha = 0.2f;
 
         private CanvasGroup canvasGroup;
         private Image transitionImage;
@@ -23,10 +30,17 @@ namespace GameJam.Gameplay
         private Renderer focusRenderer;
         private Coroutine fadeRoutine;
         private bool receivedFirstLevel;
+        private bool finaleShown;
+        private TextMeshProUGUI finaleText;
 
         public void ConfigureRadialMaterial(Material material)
         {
             radialMaterial = material;
+        }
+
+        public void ConfigureFinaleFont(TMP_FontAsset font)
+        {
+            finaleFont = font;
         }
 
         private void Awake()
@@ -52,10 +66,20 @@ namespace GameJam.Gameplay
             }
         }
 
-        private void OnDisable()
+    private void OnDisable()
         {
             if (levelLoader != null) levelLoader.LevelChanged -= HandleLevelChanged;
             if (gameplayEvents != null) gameplayEvents.WinPresentationReady -= HandleWinPresentationReady;
+        }
+
+        private void Update()
+        {
+            if (!finaleShown || Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                return;
+            }
+
+            SceneManager.LoadScene("MainMenu");
         }
 
         private void ResolveReferences()
@@ -112,16 +136,80 @@ namespace GameJam.Gameplay
 
         private void HandleWinPresentationReady()
         {
-            // Keep the final-level win presentation visible; there is no next
-            // board that needs the transition overlay.
-            if (levelLoader == null ||
-                (levelLoader.CurrentGameLevel != null && levelLoader.CurrentGameLevel.NextLevel == null &&
-                 levelLoader.CurrentLevelIndex + 1 >= levelLoader.LevelCount))
+            if (levelLoader == null)
             {
                 return;
             }
 
+            var isFinalLevel = levelLoader.CurrentGameLevel != null &&
+                               levelLoader.CurrentGameLevel.NextLevel == null &&
+                               levelLoader.CurrentLevelIndex + 1 >= levelLoader.LevelCount;
+            if (isFinalLevel)
+            {
+                if (fadeRoutine != null) StopCoroutine(fadeRoutine);
+                fadeRoutine = StartCoroutine(FadeToFinale());
+                return;
+            }
+
             StartFade(1f, fadeOutDuration);
+        }
+
+        private IEnumerator FadeToFinale()
+        {
+            yield return FadeTo(1f, fadeOutDuration);
+            CreateFinaleText();
+            fadeRoutine = null;
+        }
+
+        private void CreateFinaleText()
+        {
+            if (finaleShown)
+            {
+                return;
+            }
+
+            var finaleCanvasObject = new GameObject("FinaleTextCanvas");
+            var canvas = finaleCanvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = sortingOrder + 1;
+
+            var canvasGroup = finaleCanvasObject.AddComponent<CanvasGroup>();
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
+            var textObject = new GameObject("ToBeContinuedText");
+            textObject.transform.SetParent(finaleCanvasObject.transform, false);
+            finaleText = textObject.AddComponent<TextMeshProUGUI>();
+            finaleText.text = "TO BE CONTINUED\\n<size=70%>PRESS ESC TO RETURN</size>";
+            finaleText.font = finaleFont;
+            finaleText.fontSize = 42f;
+            finaleText.alignment = TextAlignmentOptions.Center;
+            finaleText.color = Color.white;
+            finaleText.raycastTarget = false;
+
+            var rect = finaleText.rectTransform;
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, 90f);
+            rect.sizeDelta = new Vector2(700f, 140f);
+
+            finaleShown = true;
+            StartCoroutine(BlinkFinaleText());
+        }
+
+        private IEnumerator BlinkFinaleText()
+        {
+            while (finaleText != null)
+            {
+                var color = finaleText.color;
+                var value = Mathf.Lerp(finaleBlinkMinAlpha, 1f,
+                    Mathf.PingPong(Time.unscaledTime * finaleBlinkSpeed, 1f));
+                color.a = value;
+                finaleText.color = color;
+                yield return null;
+            }
         }
 
         private void LateUpdate()
@@ -163,7 +251,7 @@ namespace GameJam.Gameplay
 
             var elapsed = 0f;
             var startRadius = GetRadius();
-            var targetRadius = targetAlpha > 0.5f ? 0f : 2f;
+            var targetRadius = targetAlpha > 0.5f ? closedRadius : 2f;
             while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;

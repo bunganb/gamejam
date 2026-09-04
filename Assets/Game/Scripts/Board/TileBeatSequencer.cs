@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 namespace GameJam.Gameplay
 {
@@ -16,6 +17,7 @@ namespace GameJam.Gameplay
         [SerializeField] private AudioClip ketipungOneAccent;
         [SerializeField] private AudioClip ketipungTwoSoft;
         [SerializeField] private AudioClip ketipungTwoAccent;
+        [SerializeField] private AudioMixerGroup outputAudioMixerGroup;
         [SerializeField] private LevelMusicDefinition[] musicProfiles = Array.Empty<LevelMusicDefinition>();
         [SerializeField, Min(0)] private int enabledLevelIndex;
         [SerializeField, Range(1, 4)] private int subdivisionsPerBeat = 2;
@@ -49,6 +51,12 @@ namespace GameJam.Gameplay
         private LevelMusicDefinition activeProfile;
 
         public int CommittedStepCount => committedStepCount;
+
+        public void ConfigureOutputAudioMixerGroup(AudioMixerGroup mixerGroup)
+        {
+            outputAudioMixerGroup = mixerGroup;
+            ApplyOutputAudioMixerGroup();
+        }
 
         public void ConfigureReferences(
             PuzzleGameplayEvents eventHub,
@@ -438,10 +446,33 @@ namespace GameJam.Gameplay
                 voice.playOnAwake = false;
                 voice.loop = false;
                 voice.spatialBlend = 0f;
+                voice.outputAudioMixerGroup = outputAudioMixerGroup;
                 result[index] = voice;
             }
 
             return result;
+        }
+
+        private void ApplyOutputAudioMixerGroup()
+        {
+            ApplyOutputAudioMixerGroup(previewVoices);
+            ApplyOutputAudioMixerGroup(loopVoices);
+        }
+
+        private void ApplyOutputAudioMixerGroup(AudioSource[] voices)
+        {
+            if (voices == null)
+            {
+                return;
+            }
+
+            foreach (var voice in voices)
+            {
+                if (voice != null)
+                {
+                    voice.outputAudioMixerGroup = outputAudioMixerGroup;
+                }
+            }
         }
 
         private void ScheduleVoice(

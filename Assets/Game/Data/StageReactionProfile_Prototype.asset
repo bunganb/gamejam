@@ -25,7 +25,7 @@ MonoBehaviour:
   lightBeatPulse: 0.2
   lightRowPulse: 0.45
   lightFailurePulse: 0.35
-  spotlightFadeDuration: 0.35
+  spotlightFadeDuration: 0.8
   spotlightIntensity: 8
   spotlightRange: 14
   spotlightOuterAngle: 32

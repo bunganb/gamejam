@@ -2,6 +2,7 @@ using GameJam.Gameplay;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 
 namespace GameJam.Editor
@@ -71,6 +72,13 @@ namespace GameJam.Editor
             musicDirector.ConfigureSampleSequencerScope(levelLoader, 0);
             musicDirector.ConfigureFullSongTransition(1, 0.75f, 1.15f);
             var sequencer = GetOrAdd<TileBeatSequencer>(musicRoot.gameObject);
+            var mixer = AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/Game/MainMixer.mixer");
+            var sfxGroups = mixer != null ? mixer.FindMatchingGroups("SFX") : null;
+            if (sfxGroups == null || sfxGroups.Length == 0)
+            {
+                throw new System.InvalidOperationException("MainMixer is missing its SFX group.");
+            }
+            sequencer.ConfigureOutputAudioMixerGroup(sfxGroups[0]);
             sequencer.ConfigureReferences(
                 eventHub,
                 musicDirector,

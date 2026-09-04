@@ -138,7 +138,8 @@ namespace GameJam.Gameplay
             var state = ResolveState(jumpClip);
             if (synchronizeMovementToJumpClip && gameplayController != null && state != null)
             {
-                gameplayController.SetMovementDuration(state.length);
+                gameplayController.SetMovementDuration(
+                    state.length * gameplayController.MovementDurationMultiplier);
             }
         }
 
