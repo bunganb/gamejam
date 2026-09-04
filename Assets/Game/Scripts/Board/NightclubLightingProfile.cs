@@ -25,7 +25,10 @@ namespace GameJam.Gameplay
 
         [Header("Moving Spotlights")]
         [SerializeField, Min(0f)] private float grooveSpotlightIntensity = 3.25f;
-        [SerializeField, Min(0f)] private float fullGrooveSpotlightIntensity = 7f;
+        [SerializeField, Min(0f)] private float fullGrooveSpotlightIntensity = 12f;
+        [SerializeField, Min(0.01f)] private float spotlightFadeDuration = 0.8f;
+        [SerializeField, Range(0f, 1f)] private float spotlightBeamOpacity = 0.1f;
+        [SerializeField, Min(0f)] private float spotlightBeamEmission = 0.75f;
         [SerializeField, Min(0f)] private float spotlightRange = 14f;
         [SerializeField, Range(1f, 179f)] private float outerSpotAngle = 34f;
         [SerializeField, Range(0f, 179f)] private float innerSpotAngle = 18f;
@@ -57,6 +60,9 @@ namespace GameJam.Gameplay
         public float TransitionDuration => transitionDuration;
         public float GrooveSpotlightIntensity => grooveSpotlightIntensity;
         public float FullGrooveSpotlightIntensity => fullGrooveSpotlightIntensity;
+        public float SpotlightFadeDuration => spotlightFadeDuration;
+        public float SpotlightBeamOpacity => spotlightBeamOpacity;
+        public float SpotlightBeamEmission => spotlightBeamEmission;
         public float SpotlightRange => spotlightRange;
         public float OuterSpotAngle => outerSpotAngle;
         public float InnerSpotAngle => Mathf.Min(innerSpotAngle, outerSpotAngle);
@@ -85,7 +91,10 @@ namespace GameJam.Gameplay
             beatPulseAmount = 0.3f;
             transitionDuration = 0.25f;
             grooveSpotlightIntensity = 3.25f;
-            fullGrooveSpotlightIntensity = 7f;
+            fullGrooveSpotlightIntensity = 12f;
+            spotlightFadeDuration = 0.8f;
+            spotlightBeamOpacity = 0.1f;
+            spotlightBeamEmission = 0.75f;
             spotlightRange = 14f;
             outerSpotAngle = 34f;
             innerSpotAngle = 18f;

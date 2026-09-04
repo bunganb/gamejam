@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -24,6 +25,9 @@ namespace GameJam.Gameplay
         private float rowPulse;
         private float failurePulse;
         private float currentEmission;
+        private readonly List<Light> staticLights = new();
+        private readonly List<float> staticLightIntensities = new();
+        private float staticLightFade;
 
         public StageReactionState State => state;
         public float MusicBeatPulse { get; private set; }
@@ -40,6 +44,7 @@ namespace GameJam.Gameplay
             danceFloor = floor;
             reactionVolume = volume;
             CacheVolumeOverrides();
+            CacheStaticLights(false);
             ResetImmediately();
         }
 
@@ -64,11 +69,18 @@ namespace GameJam.Gameplay
             ApplyVisuals();
         }
 
-        private void Awake() => CacheVolumeOverrides();
+        private void Awake()
+        {
+            CacheVolumeOverrides();
+            CacheStaticLights(Application.isPlaying);
+        }
 
         private void Update()
         {
             if (profile == null) return;
+            staticLightFade = Mathf.MoveTowards(staticLightFade, 1f,
+                Time.unscaledDeltaTime / Mathf.Max(0.01f, profile.TransitionDuration * 3f));
+            ApplyStaticLightFade();
             MusicBeatPulse = musicDirector != null && musicDirector.TimelineStarted
                 ? CalculateBeatPulse(AudioSettings.dspTime, musicDirector.TimelineStartDspTime, musicDirector.BeatsPerMinute)
                 : 0f;
@@ -93,6 +105,7 @@ namespace GameJam.Gameplay
                 neon.SetEmissionIntensity(currentEmission);
                 neon.SetPulse(pulse * profile.BeatPulseAmount);
             }
+            danceFloor?.SetProgress(progress);
 
             if (state == StageReactionState.FullGroove)
             {
@@ -102,7 +115,9 @@ namespace GameJam.Gameplay
             }
             else if (state == StageReactionState.Groove)
             {
-                movingSpotlights?.SetTarget(Mathf.Lerp(0.25f, 0.65f, progress), 2);
+                // Moving spotlights are reserved for the payoff state. Groove still uses
+                // neon/tile pulses, keeping the stage readable and the Full Groove reveal clear.
+                movingSpotlights?.SetTarget(0f, 0);
                 strobe?.SetEnabled(false);
                 danceFloor?.SetPattern(DanceFloorPatternMode.Wave, profile.GrooveEmission * 0.25f, pulse);
             }
@@ -134,6 +149,35 @@ namespace GameJam.Gameplay
             if (reactionVolume == null || reactionVolume.profile == null) return;
             reactionVolume.profile.TryGet(out bloom);
             reactionVolume.profile.TryGet(out colorAdjustments);
+        }
+
+        private void CacheStaticLights(bool resetFade)
+        {
+            staticLights.Clear();
+            staticLightIntensities.Clear();
+            foreach (var light in GetComponentsInChildren<Light>(true))
+            {
+                if (light == null || IsControllerLight(light)) continue;
+                staticLights.Add(light);
+                staticLightIntensities.Add(light.intensity);
+                if (resetFade) light.intensity = 0f;
+            }
+            if (resetFade) staticLightFade = 0f;
+        }
+
+        private bool IsControllerLight(Light light)
+        {
+            return (movingSpotlights != null && light.transform.IsChildOf(movingSpotlights.transform))
+                || (strobe != null && light.transform.IsChildOf(strobe.transform));
+        }
+
+        private void ApplyStaticLightFade()
+        {
+            for (var i = 0; i < staticLights.Count; i++)
+            {
+                var light = staticLights[i];
+                if (light != null) light.intensity = staticLightIntensities[i] * staticLightFade;
+            }
         }
 
         public static float CalculateBeatPulse(double dspTime, double timelineStart, float beatsPerMinute)

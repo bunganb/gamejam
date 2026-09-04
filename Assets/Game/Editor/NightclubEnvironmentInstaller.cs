@@ -67,7 +67,11 @@ namespace GameJam.Editor
             manager.ConfigureReferences(profile, music, movingLights, strobe, neonGroups, danceFloor, reactionVolume);
 
             var director = FindComponent<StageReactionDirector>(scene);
-            if (director != null) director.ConfigureNightclubLighting(manager);
+            if (director != null)
+            {
+                director.ConfigureNightclubLighting(manager);
+                SetObjectReference(director, "nightclubLighting", manager);
+            }
 
             var legacyRig = FindComponent<DiscoSpotlightRig>(scene);
             if (legacyRig != null)
@@ -498,6 +502,17 @@ namespace GameJam.Editor
         private static T FindNamedComponent<T>(Scene scene, string name) where T : Component
         {
             return FindInScene(scene, name)?.GetComponent<T>();
+        }
+
+        private static void SetObjectReference(UnityEngine.Object target, string propertyName, UnityEngine.Object value)
+        {
+            var serializedObject = new SerializedObject(target);
+            var property = serializedObject.FindProperty(propertyName);
+            if (property == null)
+                throw new InvalidOperationException($"Missing serialized field {propertyName} on {target.name}.");
+            property.objectReferenceValue = value;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(target);
         }
 
         private sealed class NightclubMaterials

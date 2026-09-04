@@ -18,9 +18,11 @@ namespace GameJam.Gameplay
         [SerializeField, Min(0f)] private float animationSpeed = 1f;
         [SerializeField, Range(0f, 1f)] private float animationAmount = 0.2f;
         [SerializeField] private int flickerSeed = 17;
+        [SerializeField, Min(0f)] private float startupFadeDuration = 0.8f;
 
         private MaterialPropertyBlock propertyBlock;
         private float externalPulse;
+        private float startupBlend;
 
         public void Configure(Renderer[] targets, Color neonColor, NeonAnimationMode mode, int seed = 17)
         {
@@ -35,12 +37,20 @@ namespace GameJam.Gameplay
         public void SetEmissionIntensity(float value) => emissionIntensity = Mathf.Max(0f, value);
         public void SetPulse(float value) => externalPulse = Mathf.Clamp01(value);
 
-        private void LateUpdate() => Apply(Time.unscaledTime);
+        private void Awake() => startupBlend = 0f;
+
+        private void LateUpdate()
+        {
+            startupBlend = startupFadeDuration <= 0f
+                ? 1f
+                : Mathf.MoveTowards(startupBlend, 1f, Time.unscaledDeltaTime / startupFadeDuration);
+            Apply(Time.unscaledTime);
+        }
 
         public void Apply(float time)
         {
             var animated = EvaluateAnimation(animationMode, time, animationSpeed, animationAmount, flickerSeed);
-            var intensity = emissionIntensity * (animated + externalPulse * 0.3f);
+            var intensity = emissionIntensity * (animated + externalPulse * 0.3f) * startupBlend;
             propertyBlock ??= new MaterialPropertyBlock();
             foreach (var target in renderers)
             {

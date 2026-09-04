@@ -18,9 +18,16 @@ namespace GameJam.Gameplay
         [SerializeField, Min(0.01f)] private float patternSpeed = 1f;
         [SerializeField, Min(0.01f)] private float waveSpacing = 0.45f;
         [SerializeField] private int randomSeed = 31;
+        [SerializeField, Min(0f)] private float startupFadeDuration = 0.8f;
+        [SerializeField, Min(0.01f)] private float patternFadeDuration = 0.35f;
 
         private MaterialPropertyBlock propertyBlock;
         private float beatPulse;
+        private float startupBlend;
+        private float currentEmissionIntensity;
+        private float targetEmissionIntensity;
+        private float currentProgress;
+        private float targetProgress;
 
         public int TileCount => tiles?.Length ?? 0;
 
@@ -28,17 +35,37 @@ namespace GameJam.Gameplay
         {
             tiles = floorTiles ?? Array.Empty<Renderer>();
             palette = colors ?? Array.Empty<Color>();
+            currentEmissionIntensity = 0f;
+            targetEmissionIntensity = emissionIntensity;
+            currentProgress = targetProgress = 0f;
             Apply(0f);
         }
 
         public void SetPattern(DanceFloorPatternMode mode, float intensity, float pulse)
         {
             patternMode = mode;
-            emissionIntensity = Mathf.Max(0f, intensity);
+            targetEmissionIntensity = Mathf.Max(0f, intensity);
             beatPulse = Mathf.Clamp01(pulse);
         }
 
-        private void LateUpdate() => Apply(Time.unscaledTime);
+        public void SetProgress(float normalizedProgress)
+        {
+            targetProgress = Mathf.Clamp01(normalizedProgress);
+        }
+
+        private void Awake() => startupBlend = 0f;
+
+        private void LateUpdate()
+        {
+            startupBlend = startupFadeDuration <= 0f
+                ? 1f
+                : Mathf.MoveTowards(startupBlend, 1f, Time.unscaledDeltaTime / startupFadeDuration);
+            currentEmissionIntensity = Mathf.MoveTowards(currentEmissionIntensity, targetEmissionIntensity,
+                Time.unscaledDeltaTime / Mathf.Max(0.01f, patternFadeDuration));
+            currentProgress = Mathf.MoveTowards(currentProgress, targetProgress,
+                Time.unscaledDeltaTime / Mathf.Max(0.01f, patternFadeDuration));
+            Apply(Time.unscaledTime);
+        }
 
         public void Apply(float time)
         {
@@ -50,9 +77,11 @@ namespace GameJam.Gameplay
                 if (tile == null) continue;
                 var color = EvaluateColor(palette, patternMode, i, time, patternSpeed, waveSpacing, randomSeed);
                 var pulse = patternMode == DanceFloorPatternMode.BeatPulse ? beatPulse : 0f;
-                var intensity = emissionIntensity * (1f + pulse * 0.4f);
+                var progressPosition = currentProgress * tiles.Length - i;
+                var tileReveal = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(progressPosition));
+                var intensity = currentEmissionIntensity * (1f + pulse * 0.4f) * startupBlend * tileReveal;
                 tile.GetPropertyBlock(propertyBlock);
-                propertyBlock.SetColor(BaseColorId, color * 0.12f);
+                propertyBlock.SetColor(BaseColorId, color * (0.12f * tileReveal));
                 propertyBlock.SetColor(EmissionColorId, color * intensity);
                 tile.SetPropertyBlock(propertyBlock);
             }

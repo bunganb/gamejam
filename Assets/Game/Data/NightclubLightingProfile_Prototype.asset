@@ -27,7 +27,10 @@ MonoBehaviour:
   beatPulseAmount: 0.3
   transitionDuration: 0.25
   grooveSpotlightIntensity: 3.25
-  fullGrooveSpotlightIntensity: 7
+  fullGrooveSpotlightIntensity: 12
+  spotlightFadeDuration: 0.8
+  spotlightBeamOpacity: 0.1
+  spotlightBeamEmission: 0.75
   spotlightRange: 14
   outerSpotAngle: 34
   innerSpotAngle: 18

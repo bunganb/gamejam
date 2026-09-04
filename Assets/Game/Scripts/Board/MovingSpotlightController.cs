@@ -24,6 +24,8 @@ namespace GameJam.Gameplay
 
         public int SpotlightCount => spotlights?.Length ?? 0;
         public float CurrentWeight => currentWeight;
+        public float TargetWeight => targetWeight;
+        public int BeamCount => beamRenderers?.Length ?? 0;
 
         public void Configure(Transform[] pans, Transform[] tilts, Light[] lights, NightclubLightingProfile lightingProfile)
         {
@@ -47,8 +49,6 @@ namespace GameJam.Gameplay
         {
             targetWeight = Mathf.Clamp01(weight);
             activeLightCount = Mathf.Clamp(enabledLightCount, 0, SpotlightCount);
-            if (targetWeight > 0f && currentWeight <= 0f)
-                currentWeight = Mathf.Min(targetWeight, 0.05f);
             if (profile != null) Animate(Time.unscaledTime);
         }
 
@@ -74,7 +74,7 @@ namespace GameJam.Gameplay
         {
             if (profile == null) return;
             currentWeight = Mathf.MoveTowards(currentWeight, targetWeight,
-                Time.unscaledDeltaTime / Mathf.Max(0.01f, profile.TransitionDuration));
+                Time.unscaledDeltaTime / Mathf.Max(0.01f, profile.SpotlightFadeDuration));
             Animate(Time.unscaledTime);
         }
 
@@ -133,8 +133,8 @@ namespace GameJam.Gameplay
             beamPropertyBlock ??= new MaterialPropertyBlock();
             beam.GetPropertyBlock(beamPropertyBlock);
             beamPropertyBlock.SetColor(BaseColorId,
-                new Color(lightColor.r, lightColor.g, lightColor.b, 0.055f * weight));
-            beamPropertyBlock.SetColor(EmissionColorId, lightColor * (0.45f * weight));
+                new Color(lightColor.r, lightColor.g, lightColor.b, profile.SpotlightBeamOpacity * weight));
+            beamPropertyBlock.SetColor(EmissionColorId, lightColor * (profile.SpotlightBeamEmission * weight));
             beam.SetPropertyBlock(beamPropertyBlock);
         }
 

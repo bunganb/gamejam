@@ -30,15 +30,21 @@ namespace GameJam.Gameplay
         [SerializeField] private Color yellowColor = new Color(1f, 0.8f, 0f);
         [SerializeField] private Color emptyColor = Color.white;
 
-        [Header("Shake Effect Settings")]
-        [SerializeField] private float shakeDuration = 0.4f;
-        [SerializeField] private float shakeAmount = 10f;
+        [Header("Goal Beat Pulse")]
+        [SerializeField, Min(0f)] private float goalPulseScale = 1.12f;
+        [SerializeField, Min(0.05f)] private float goalPulseDuration = 0.52f;
+
+        [Header("Goal Horizontal Scroll")]
+        [SerializeField, Min(0.05f)] private float goalScrollDuration = 0.24f;
+        [SerializeField, Min(0f)] private float goalScrollDistance = 0f;
 
         // Menyimpan jumlah note yang sudah selesai
         private int previousMatchedTotal = -1;
 
-        // Coroutine shake yang sedang berjalan
-        private Coroutine shakeCoroutine;
+        private Coroutine scrollCoroutine;
+        private RectTransform[] slotTransforms;
+        private Vector2[] slotBasePositions;
+        private Vector3 centerBaseScale = Vector3.one;
 
         private void Start()
         {
@@ -48,6 +54,8 @@ namespace GameJam.Gameplay
                 previousMatchedTotal =
                     gameplayController.ProgressTracker.MatchedTotal;
             }
+
+            CacheSlotLayout();
         }
 
         private void Update()
@@ -98,59 +106,171 @@ namespace GameJam.Gameplay
             if (previousMatchedTotal == -1)
             {
                 previousMatchedTotal = currentIndex;
+                ApplyGoalChain(currentIndex);
             }
             else if (currentIndex < previousMatchedTotal)
             {
-                // ======================================
-                // PUZZLE DI-RESET
-                // ======================================
-
-                // Jangan shake saat reset.
-                // Hanya sinkronkan nilai sebelumnya.
                 previousMatchedTotal = currentIndex;
+                StopGoalAnimation(true);
+                ApplyGoalChain(currentIndex);
             }
             else if (currentIndex > previousMatchedTotal)
             {
-                // ======================================
-                // NOTE BERHASIL DISELESAIKAN
-                // ======================================
-
-                Debug.Log(
-                    $"Progress berubah: " +
-                    $"{previousMatchedTotal} -> {currentIndex}"
-                );
-
-                PlayCenterBoxShake();
-
                 previousMatchedTotal = currentIndex;
+                StartGoalScroll(currentIndex);
             }
 
             // ==========================================
             // UPDATE 3 SLOT
             // ==========================================
 
-            if (chainSlots.Length >= 3)
+            if (scrollCoroutine == null)
             {
-                // Slot kiri - box
-                SetSlotData(
-                    chainSlots[0],
-                    allNotes,
-                    currentIndex - 1
-                );
+                ApplyGoalChain(currentIndex, allNotes);
+            }
 
-                // Slot tengah - box (1)
-                SetSlotData(
-                    chainSlots[1],
-                    allNotes,
-                    currentIndex
-                );
+            UpdateGoalBeatPulse();
+        }
 
-                // Slot kanan - box (2)
-                SetSlotData(
-                    chainSlots[2],
-                    allNotes,
-                    currentIndex + 1
-                );
+        private void CacheSlotLayout()
+        {
+            if (chainSlots == null || chainSlots.Length < 3 ||
+                chainSlots[0].noteImage == null || chainSlots[1].noteImage == null ||
+                chainSlots[2].noteImage == null)
+            {
+                return;
+            }
+
+            slotTransforms = new RectTransform[3];
+            slotBasePositions = new Vector2[3];
+            for (var index = 0; index < 3; index++)
+            {
+                slotTransforms[index] = chainSlots[index].noteImage.rectTransform;
+                slotBasePositions[index] = slotTransforms[index].anchoredPosition;
+            }
+
+            centerBaseScale = slotTransforms[1].localScale;
+        }
+
+        private void ApplyGoalChain(int currentIndex, List<BeatColor> notes = null)
+        {
+            if (notes == null)
+            {
+                notes = CollectNotes();
+            }
+
+            if (chainSlots.Length < 3)
+            {
+                return;
+            }
+
+            SetSlotData(chainSlots[0], notes, currentIndex - 1);
+            SetSlotData(chainSlots[1], notes, currentIndex);
+            SetSlotData(chainSlots[2], notes, currentIndex + 1);
+        }
+
+        private List<BeatColor> CollectNotes()
+        {
+            var notes = new List<BeatColor>();
+            foreach (var row in gameplayController.Level.ObjectiveRows)
+            {
+                for (var index = 0; index < row.NoteCount; index++)
+                {
+                    notes.Add(row.Notes[index]);
+                }
+            }
+
+            return notes;
+        }
+
+        private void StartGoalScroll(int targetIndex)
+        {
+            if (slotTransforms == null)
+            {
+                ApplyGoalChain(targetIndex);
+                return;
+            }
+
+            StopGoalAnimation(true);
+            scrollCoroutine = StartCoroutine(ScrollGoalChain(targetIndex));
+        }
+
+        private IEnumerator ScrollGoalChain(int targetIndex)
+        {
+            var distance = goalScrollDistance;
+            if (distance <= 0f)
+            {
+                distance = Mathf.Abs(slotBasePositions[2].x - slotBasePositions[1].x);
+            }
+
+            if (distance <= 0f)
+            {
+                distance = 64f;
+            }
+
+            var elapsed = 0f;
+            while (elapsed < goalScrollDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                var normalized = Mathf.Clamp01(elapsed / goalScrollDuration);
+                var eased = 1f - Mathf.Pow(1f - normalized, 3f);
+                var offset = Vector2.left * (distance * eased);
+                for (var index = 0; index < slotTransforms.Length; index++)
+                {
+                    slotTransforms[index].anchoredPosition = slotBasePositions[index] + offset;
+                }
+
+                yield return null;
+            }
+
+            RestoreSlotPositions();
+            ApplyGoalChain(targetIndex);
+            scrollCoroutine = null;
+        }
+
+        private void UpdateGoalBeatPulse()
+        {
+            if (slotTransforms == null || slotTransforms.Length < 2 ||
+                gameplayController.ProgressTracker.IsComplete)
+            {
+                if (slotTransforms != null && slotTransforms.Length > 1)
+                {
+                    slotTransforms[1].localScale = centerBaseScale;
+                }
+
+                return;
+            }
+
+            var phase = Mathf.Repeat(Time.unscaledTime, goalPulseDuration) / goalPulseDuration;
+            var pulse = 0.5f + 0.5f * Mathf.Cos(phase * Mathf.PI * 2f);
+            var scale = Mathf.Lerp(1f, goalPulseScale, pulse);
+            slotTransforms[1].localScale = centerBaseScale * scale;
+        }
+
+        private void StopGoalAnimation(bool restorePosition)
+        {
+            if (scrollCoroutine != null)
+            {
+                StopCoroutine(scrollCoroutine);
+                scrollCoroutine = null;
+            }
+
+            if (restorePosition)
+            {
+                RestoreSlotPositions();
+            }
+        }
+
+        private void RestoreSlotPositions()
+        {
+            if (slotTransforms == null || slotBasePositions == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < slotTransforms.Length; index++)
+            {
+                slotTransforms[index].anchoredPosition = slotBasePositions[index];
             }
         }
 
@@ -195,120 +315,12 @@ namespace GameJam.Gameplay
             };
         }
 
-        // ==========================================
-        // START SHAKE BOX TENGAH
-        // ==========================================
-
-        private void PlayCenterBoxShake()
-        {
-            if (chainSlots.Length < 2 ||
-                chainSlots[1].noteImage == null)
-            {
-                return;
-            }
-
-            RectTransform target =
-                chainSlots[1].noteImage.rectTransform;
-
-            // Kalau shake masih berjalan,
-            // hentikan lalu mulai dari awal.
-            if (shakeCoroutine != null)
-            {
-                StopCoroutine(shakeCoroutine);
-
-                target.anchoredPosition =
-                    target.anchoredPosition;
-            }
-
-            shakeCoroutine =
-                StartCoroutine(
-                    PlayShakeEffect(target)
-                );
-        }
-
-        // ==========================================
-        // CAMERA STYLE POSITION SHAKE
-        // ==========================================
-
-        private IEnumerator PlayShakeEffect(
-            RectTransform target)
-        {
-            Debug.Log(
-                $"SHAKE START: {target.name}"
-            );
-
-            float elapsedTime = 0f;
-
-            // Simpan posisi tepat saat shake dimulai
-            Vector2 originalPosition =
-                target.anchoredPosition;
-
-            while (elapsedTime < shakeDuration)
-            {
-                elapsedTime += Time.deltaTime;
-
-                // Progress 0 -> 1
-                float normalizedTime =
-                    elapsedTime / shakeDuration;
-
-                // Shake semakin kecil mendekati akhir
-                float damping =
-                    1f - normalizedTime;
-
-                // Random position
-                float offsetX =
-                    Random.Range(
-                        -shakeAmount,
-                        shakeAmount
-                    ) * damping;
-
-                float offsetY =
-                    Random.Range(
-                        -shakeAmount,
-                        shakeAmount
-                    ) * damping;
-
-                target.anchoredPosition =
-                    originalPosition +
-                    new Vector2(
-                        offsetX,
-                        offsetY
-                    );
-
-                yield return null;
-            }
-
-            // Kembalikan ke posisi awal
-            target.anchoredPosition =
-                originalPosition;
-
-            shakeCoroutine = null;
-
-            Debug.Log(
-                $"SHAKE END: {target.name}"
-            );
-        }
-
-        // ==========================================
-        // SAFETY RESET
-        // ==========================================
-
         private void OnDisable()
         {
-            if (shakeCoroutine != null)
+            StopGoalAnimation(true);
+            if (slotTransforms != null && slotTransforms.Length > 1)
             {
-                StopCoroutine(shakeCoroutine);
-                shakeCoroutine = null;
-            }
-
-            if (chainSlots.Length >= 2 &&
-                chainSlots[1].noteImage != null)
-            {
-                RectTransform target =
-                    chainSlots[1].noteImage.rectTransform;
-
-                // Posisi tetap mengikuti posisi UI saat ini.
-                // Tidak ada perubahan scale / rotation.
+                slotTransforms[1].localScale = centerBaseScale;
             }
         }
     }

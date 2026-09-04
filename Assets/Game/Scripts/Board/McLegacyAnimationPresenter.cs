@@ -29,6 +29,15 @@ namespace GameJam.Gameplay
             Subscribe();
         }
 
+        public void ConfigureClipNames(string idle, string jump, string win)
+        {
+            idleClip = idle;
+            jumpClip = jump;
+            winClip = win;
+            ConfigureClipStates();
+            SynchronizeMovementTiming();
+        }
+
         private void Awake()
         {
             // Use Unity's overloaded null check. Serialized UnityEngine.Object fields
