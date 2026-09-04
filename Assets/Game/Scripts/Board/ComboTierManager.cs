@@ -21,13 +21,36 @@ public class ComboTierManager : MonoBehaviour
 
     [Header("Gameplay Events")]
     [SerializeField] private PuzzleGameplayEvents gameplayEvents;
+    [Header("Combo SFX")]
+    [SerializeField] private AudioSource sfxSource;
+    [SerializeField] private AudioClip combo1Clip;
+    [SerializeField] private AudioClip combo2Clip;
+    [SerializeField] private AudioClip combo3Clip;
+    [SerializeField] private AudioClip crowdBooClip;
 
     private int currentCombo = 0;
+    private bool perfectChainUnlocked;
     private GameObject activeComboTier;
     private Coroutine comboAnimation;
     private Vector3 comboTier1Scale;
     private Vector3 comboTier2Scale;
     private Vector3 comboTier3Scale;
+
+    public void ConfigureAudio(AudioSource source, AudioClip combo1, AudioClip combo2,
+        AudioClip combo3, AudioClip crowdBoo)
+    {
+        sfxSource = source;
+        combo1Clip = combo1;
+        combo2Clip = combo2;
+        combo3Clip = combo3;
+        crowdBooClip = crowdBoo;
+        if (sfxSource != null)
+        {
+            sfxSource.playOnAwake = false;
+            sfxSource.loop = false;
+            sfxSource.spatialBlend = 0f;
+        }
+    }
 
     private void OnEnable()
     {
@@ -45,6 +68,7 @@ public class ComboTierManager : MonoBehaviour
         gameplayEvents.ChainAdvanced += HandleChainAdvanced;
         gameplayEvents.ChainFailed += HandleChainFailed;
         gameplayEvents.ChainReset += HandleChainReset;
+        gameplayEvents.ChainCompleted += HandleChainCompleted;
     }
 
     private void OnDisable()
@@ -57,6 +81,7 @@ public class ComboTierManager : MonoBehaviour
         gameplayEvents.ChainAdvanced -= HandleChainAdvanced;
         gameplayEvents.ChainFailed -= HandleChainFailed;
         gameplayEvents.ChainReset -= HandleChainReset;
+        gameplayEvents.ChainCompleted -= HandleChainCompleted;
     }
 
     private void Start()
@@ -79,13 +104,22 @@ public class ComboTierManager : MonoBehaviour
 
     private void HandleChainFailed(GameplayProgressSnapshot snapshot)
     {
+        PlaySfx(crowdBooClip);
         MissBeat();
     }
 
     private void HandleChainReset()
     {
         currentCombo = 0;
+        perfectChainUnlocked = false;
         ResetComboTiers();
+    }
+
+    private void HandleChainCompleted(GameplayProgressSnapshot snapshot)
+    {
+        // Tier 3 is the Perfect Chain banner: reveal it only after Full Groove is reached.
+        perfectChainUnlocked = true;
+        UpdateTampilanCombo();
     }
 
     // Panggil fungsi ini setiap kali pemain BERHASIL mengenai nada
@@ -103,6 +137,7 @@ public class ComboTierManager : MonoBehaviour
     public void MissBeat()
     {
         currentCombo = 0;
+        perfectChainUnlocked = false;
         
         // Sembunyikan gambar combo 1, 2, 3
         ResetComboTiers();
@@ -123,7 +158,7 @@ public class ComboTierManager : MonoBehaviour
         GameObject targetTier = null;
 
         // Logika 9 kali berturut-turut
-        if (currentCombo >= 9)
+        if (perfectChainUnlocked)
         {
             targetTier = comboTier3;
         }
@@ -142,7 +177,21 @@ public class ComboTierManager : MonoBehaviour
         {
             if (comboAnimation != null) StopCoroutine(comboAnimation);
             comboAnimation = StartCoroutine(ChangeComboTier(targetTier));
+            PlayTierSfx(targetTier);
         }
+    }
+
+    private void PlayTierSfx(GameObject tier)
+    {
+        if (tier == null) return;
+        if (tier == comboTier1) PlaySfx(combo1Clip);
+        else if (tier == comboTier2) PlaySfx(combo2Clip);
+        else if (tier == comboTier3) PlaySfx(combo3Clip);
+    }
+
+    private void PlaySfx(AudioClip clip)
+    {
+        if (sfxSource != null && clip != null) sfxSource.PlayOneShot(clip);
     }
 
     private IEnumerator ChangeComboTier(GameObject targetTier)

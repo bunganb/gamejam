@@ -816,6 +816,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LoadingScreenManager
   slider: {fileID: 108824518}
   readyText: {fileID: 484939392}
+  audioPreloadTimeout: 8
+  radialTransitionMaterial: {fileID: 2100000, guid: b38118cb73967e847920d2aa78f23aea, type: 2}
+  transitionFadeOutDuration: 0.75
 --- !u!1 &684319996
 GameObject:
   m_ObjectHideFlags: 0

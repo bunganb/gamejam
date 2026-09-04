@@ -23,6 +23,7 @@ namespace GameJam.Gameplay
         public int CurrentLevelIndex { get; private set; } = -1;
         public GameLevelDefinition CurrentGameLevel { get; private set; }
         public LevelDefinition CurrentLevel => CurrentGameLevel != null ? CurrentGameLevel.Puzzle : null;
+        public Transform PlayerTransform => player;
         public bool IsEnding { get; private set; }
         public int LevelCount => levels?.Length ?? 0;
 

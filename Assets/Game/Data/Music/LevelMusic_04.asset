@@ -20,7 +20,7 @@ MonoBehaviour:
   secondaryLayer: {fileID: 0}
   secondaryLayerThreshold: 1
   buildLayer: {fileID: 8300000, guid: b57300dd2e621e64fbdf3d4411d30476, type: 3}
-  buildLayerThreshold: 0.8
+  buildLayerRemainingNotes: 1
   topLoopLayer: {fileID: 0}
   topLoopUnlockRow: -1
   fullSong: {fileID: 8300000, guid: 7d9d95a74f5bba546a5827b97023e35c, type: 3}

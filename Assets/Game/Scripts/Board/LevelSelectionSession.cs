@@ -6,6 +6,11 @@ namespace GameJam.Gameplay
 
         public static bool HasSelection => selectedLevel != null;
 
+        // Read-only access for systems that need to prepare the selected level
+        // before GameplayPrototype is activated. The selection remains owned by
+        // LevelLoader and is still consumed exactly once there.
+        public static GameLevelDefinition SelectedLevel => selectedLevel;
+
         public static void Select(GameLevelDefinition level)
         {
             selectedLevel = level;

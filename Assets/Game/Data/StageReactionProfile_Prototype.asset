@@ -19,6 +19,12 @@ MonoBehaviour:
   audienceBobHeight: 0.08
   audienceSwayAngle: 10
   audienceDanceSpeed: 4.5
+  heningLightIntensity: 2
+  grooveLightIntensity: 3.5
+  fullGrooveLightIntensity: 5
+  lightBeatPulse: 0.2
+  lightRowPulse: 0.45
+  lightFailurePulse: 0.35
   spotlightFadeDuration: 0.35
   spotlightIntensity: 8
   spotlightRange: 14
@@ -32,8 +38,8 @@ MonoBehaviour:
   - {r: 1, g: 0.05, b: 0.35, a: 1}
   - {r: 1, g: 0.65, b: 0.05, a: 1}
   - {r: 0.05, g: 0.25, b: 1, a: 1}
-  baselineBloom: 0.15
-  fullGrooveBloom: 0.65
+  baselineBloom: 0.3
+  fullGrooveBloom: 0.75
   rgbFilterIntensity: 0.38
   rgbFilterFrequency: 3.2
   rgbFilterFadeDuration: 0.15
