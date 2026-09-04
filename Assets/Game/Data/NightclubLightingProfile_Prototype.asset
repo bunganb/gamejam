@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f00c42058e3d903429085fddc4842164, type: 3}
+  m_Name: NightclubLightingProfile_Prototype
+  m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.NightclubLightingProfile
+  cyan: {r: 0.02, g: 0.9, b: 1, a: 1}
+  magenta: {r: 1, g: 0.03, b: 0.75, a: 1}
+  blue: {r: 0.05, g: 0.2, b: 1, a: 1}
+  green: {r: 0.05, g: 1, b: 0.45, a: 1}
+  palette:
+  - {r: 0.02, g: 0.9, b: 1, a: 1}
+  - {r: 1, g: 0.03, b: 0.75, a: 1}
+  - {r: 0.05, g: 0.2, b: 1, a: 1}
+  - {r: 0.05, g: 1, b: 0.45, a: 1}
+  heningEmission: 0.65
+  grooveEmission: 1.4
+  fullGrooveEmission: 2.2
+  beatPulseAmount: 0.3
+  transitionDuration: 0.25
+  grooveSpotlightIntensity: 3.25
+  fullGrooveSpotlightIntensity: 7
+  spotlightRange: 14
+  outerSpotAngle: 34
+  innerSpotAngle: 18
+  panAmplitude: 23
+  tiltAmplitude: 11
+  movementSpeed: 0.55
+  colorCycleDuration: 1.6
+  strobeInterval: 0.34
+  strobeDuration: 0.055
+  strobeIntensity: 4.5
+  randomStrobeColor: 1
+  baselineBloom: 0.5
+  fullGrooveBloom: 0.7
+  rgbFilterIntensity: 0.22

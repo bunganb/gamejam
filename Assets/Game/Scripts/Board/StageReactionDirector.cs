@@ -13,6 +13,7 @@ namespace GameJam.Gameplay
         [SerializeField] private AudienceReactionPresenter audience;
         [SerializeField] private StageBaseLightingPresenter baseLighting;
         [SerializeField] private DiscoSpotlightRig spotlights;
+        [SerializeField] private NightclubLightingManager nightclubLighting;
         [SerializeField] private Volume reactionVolume;
 
         private Bloom bloom;
@@ -30,6 +31,11 @@ namespace GameJam.Gameplay
         public StageReactionState State { get; private set; } = StageReactionState.Hening;
         public float TargetProgress => targetProgress;
         public float VisualProgress => visualProgress;
+
+        public void ConfigureNightclubLighting(NightclubLightingManager manager)
+        {
+            nightclubLighting = manager;
+        }
 
         public void ConfigureReferences(
             PuzzleGameplayEvents events,
@@ -182,7 +188,7 @@ namespace GameJam.Gameplay
             failurePulse = 1f;
             beatPulse = 0f;
             rowPulse = 0f;
-            spotlights?.SetFullGroove(false);
+            if (nightclubLighting == null) spotlights?.SetFullGroove(false);
             ApplyPresenters();
         }
 
@@ -200,7 +206,7 @@ namespace GameJam.Gameplay
             State = StageReactionState.FullGroove;
             beatPulse = 1f;
             rowPulse = 1f;
-            spotlights?.SetFullGroove(true);
+            if (nightclubLighting == null) spotlights?.SetFullGroove(true);
             ApplyPresenters();
         }
 
@@ -217,11 +223,12 @@ namespace GameJam.Gameplay
             {
                 visualProgress = 0f;
                 rgbFilterWeight = 0f;
-                spotlights?.ResetImmediately();
+                if (nightclubLighting == null) spotlights?.ResetImmediately();
+                nightclubLighting?.ResetImmediately();
             }
             else
             {
-                spotlights?.SetFullGroove(false);
+                if (nightclubLighting == null) spotlights?.SetFullGroove(false);
             }
 
             ApplyPresenters();
@@ -238,13 +245,14 @@ namespace GameJam.Gameplay
             stageRing?.Apply(visualProgress, energy, beatPulse, rowPulse, failurePulse);
             audience?.Apply(State, energy, beatPulse, rowPulse, failurePulse);
             baseLighting?.Apply(State, energy, beatPulse, rowPulse, failurePulse);
-            if (bloom != null && profile != null)
+            nightclubLighting?.ApplyState(State, energy, beatPulse, rowPulse, failurePulse);
+            if (nightclubLighting == null && bloom != null && profile != null)
             {
                 var fullWeight = State == StageReactionState.FullGroove ? energy : energy * 0.35f;
                 bloom.intensity.value = Mathf.Lerp(profile.BaselineBloom, profile.FullGrooveBloom, fullWeight);
             }
 
-            if (colorAdjustments != null && profile != null)
+            if (nightclubLighting == null && colorAdjustments != null && profile != null)
             {
                 colorAdjustments.colorFilter.value = EvaluateRgbFilter(Time.unscaledTime, rgbFilterWeight);
             }

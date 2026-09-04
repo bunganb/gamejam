@@ -104,9 +104,81 @@ namespace GameJam.Gameplay.Tests
             Assert.That(gameplayProfile.TryGet(out ColorAdjustments gameplayColor), Is.True);
             Assert.That(gameplayProfile.TryGet(out Vignette vignette), Is.True);
             Assert.That(tonemapping.mode.value, Is.EqualTo(TonemappingMode.ACES));
-            Assert.That(gameplayBloom.intensity.value, Is.EqualTo(0.15f).Within(0.001f));
-            Assert.That(gameplayColor.contrast.value, Is.EqualTo(5f).Within(0.001f));
-            Assert.That(vignette.intensity.value, Is.EqualTo(0.12f).Within(0.001f));
+            Assert.That(gameplayBloom.intensity.value, Is.EqualTo(0.18f).Within(0.001f));
+            Assert.That(gameplayColor.postExposure.value, Is.EqualTo(0.05f).Within(0.001f));
+            Assert.That(gameplayColor.contrast.value, Is.EqualTo(7f).Within(0.001f));
+            Assert.That(vignette.intensity.value, Is.EqualTo(0.17f).Within(0.001f));
+        }
+
+        [Test]
+        public void NightclubBeatPulse_UsesDspTimelineAndPeaksOnBeat()
+        {
+            Assert.That(NightclubLightingManager.CalculateBeatPulse(9d, 10d, 120f), Is.Zero);
+            Assert.That(NightclubLightingManager.CalculateBeatPulse(10d, 10d, 120f), Is.EqualTo(1f));
+            Assert.That(NightclubLightingManager.CalculateBeatPulse(10.25d, 10d, 120f), Is.EqualTo(0.0625f).Within(0.0001f));
+            Assert.That(NightclubLightingManager.CalculateBeatPulse(10.5d, 10d, 120f), Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
+        public void StrobePalette_IsDeterministicAndNeverNeedsGlobalRandomState()
+        {
+            var colors = new[] { Color.cyan, Color.magenta, Color.green };
+            Assert.That(StrobeLightController.EvaluateDeterministicColor(colors, 7),
+                Is.EqualTo(StrobeLightController.EvaluateDeterministicColor(colors, 7)));
+            Assert.That(StrobeLightController.EvaluateDeterministicColor(null, 1), Is.EqualTo(Color.white));
+        }
+
+        [Test]
+        public void DanceFloorPatterns_AreStableAndUseConfiguredPalette()
+        {
+            var colors = new[] { Color.cyan, Color.magenta, Color.green };
+            var first = DanceFloorController.EvaluateColor(colors, DanceFloorPatternMode.Random, 4, 2f, 1f, 0.5f, 31);
+            var second = DanceFloorController.EvaluateColor(colors, DanceFloorPatternMode.Random, 4, 2f, 1f, 0.5f, 31);
+            Assert.That(first, Is.EqualTo(second));
+            Assert.That(DanceFloorController.EvaluateColor(colors, DanceFloorPatternMode.BeatPulse, 4, 0f, 1f, 0.5f, 31),
+                Is.EqualTo(Color.magenta));
+        }
+
+        [Test]
+        public void NeonAnimations_StayWithinConfiguredIntensityRange()
+        {
+            for (var index = 0; index < 20; index++)
+            {
+                var smooth = NeonLightController.EvaluateAnimation(NeonAnimationMode.SmoothPulse, index * 0.1f, 1f, 0.3f, 17);
+                var flicker = NeonLightController.EvaluateAnimation(NeonAnimationMode.Flicker, index * 0.1f, 1f, 0.3f, 17);
+                Assert.That(smooth, Is.InRange(0.7f, 1f));
+                Assert.That(flicker, Is.InRange(0.7f, 1f));
+            }
+        }
+
+        [Test]
+        public void NightclubAssets_AreReusableAndUseUrpLitMaterials()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Game/Prefabs/Environment/NightclubSet.prefab");
+            var profile = AssetDatabase.LoadAssetAtPath<NightclubLightingProfile>(
+                "Assets/Game/Data/NightclubLightingProfile_Prototype.asset");
+            Assert.That(prefab, Is.Not.Null);
+            Assert.That(prefab.GetComponent<NightclubLightingManager>(), Is.Not.Null);
+            Assert.That(profile, Is.Not.Null);
+            var beamCount = 0;
+            foreach (var renderer in prefab.GetComponentsInChildren<MeshRenderer>(true))
+                if (renderer.name == "VisibleBeam") beamCount++;
+            Assert.That(beamCount, Is.EqualTo(4));
+
+            var materialNames = new[]
+            {
+                "M_Nightclub_Environment", "M_Nightclub_Metal", "M_Nightclub_DanceFloor",
+                "M_Neon_Cyan", "M_Neon_Magenta", "M_Neon_Blue", "M_Neon_Green",
+                "M_Nightclub_SpotlightBeam"
+            };
+            foreach (var materialName in materialNames)
+            {
+                var material = AssetDatabase.LoadAssetAtPath<Material>(
+                    $"Assets/Game/Art/Nightclub/Materials/{materialName}.mat");
+                Assert.That(material, Is.Not.Null, materialName);
+                Assert.That(material.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"), materialName);
+            }
         }
 
         [Test]
