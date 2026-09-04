@@ -52,7 +52,7 @@ namespace GameJam.Editor
                     throw new InvalidOperationException($"{buttonTransform.name} is missing LevelButton.");
                 }
 
-                levelButton.Configure(gameLevel);
+                levelButton.Configure(gameLevel, levelNumber - 1);
                 EditorUtility.SetDirty(levelButton);
             }
 

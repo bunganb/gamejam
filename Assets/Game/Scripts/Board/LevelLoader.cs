@@ -123,6 +123,7 @@ namespace GameJam.Gameplay
 
             CancelCompletionRoutine();
             IsEnding = false;
+            LevelUnlockProgress.MarkReached(catalogIndex);
             puzzleBoard.BuildBoard(level);
             gameplayController.ConfigureReferences(level, puzzleBoard, player, gameplayEvents);
             gameplayController.Initialize();
