@@ -4,7 +4,7 @@ namespace GameJam.Gameplay
 {
     public static class LevelUnlockProgress
     {
-        private const string HighestUnlockedLevelKey = "GameJam.HighestUnlockedLevel";
+        private const string HighestUnlockedLevelKey = "GameJam.HighestCompletedLevel.v1";
 
         public static int HighestUnlockedLevel => Mathf.Max(0, PlayerPrefs.GetInt(HighestUnlockedLevelKey, 0));
 
