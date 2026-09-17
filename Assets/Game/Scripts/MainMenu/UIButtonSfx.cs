@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 public sealed class UIButtonSfx : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
@@ -19,12 +20,28 @@ public sealed class UIButtonSfx : MonoBehaviour, IPointerEnterHandler, IPointerC
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        if (!IsInteractable())
+        {
+            return;
+        }
+
         Play(hoverClip, hoverVolume);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (!IsInteractable())
+        {
+            return;
+        }
+
         Play(clickClip, clickVolume);
+    }
+
+    private bool IsInteractable()
+    {
+        var button = GetComponent<Button>();
+        return button == null || button.interactable;
     }
 
     private void Play(AudioClip clip, float volume)
