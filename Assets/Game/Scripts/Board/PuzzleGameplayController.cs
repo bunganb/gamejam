@@ -12,6 +12,7 @@ namespace GameJam.Gameplay
         [SerializeField] private Transform player;
         [SerializeField] private PuzzleGameplayEvents gameplayEvents;
         [SerializeField, Min(0.01f)] private float movementDuration = 0.16f;
+        [SerializeField, Range(0.5f, 1f)] private float movementDurationMultiplier = 0.8f;
         [SerializeField, Min(0f)] private float settleDuration = 0.05f;
         [SerializeField, Min(0f)] private float settleHeight = 0.035f;
         [SerializeField, Min(0f)] private float failFeedbackDuration = 0.75f;
@@ -21,14 +22,13 @@ namespace GameJam.Gameplay
         private Vector2Int currentCoordinate;
         private bool initialized;
         private bool completionPublished;
-        private bool hasBufferedDirection;
-        private Vector2Int bufferedDirection;
 
         public GameplayState State { get; private set; } = GameplayState.Playing;
         public Vector2Int CurrentCoordinate => currentCoordinate;
         public ObjectiveProgressTracker ProgressTracker => progressTracker;
         public LevelDefinition Level => level;
         public float MovementDuration => movementDuration;
+        public float MovementDurationMultiplier => movementDurationMultiplier;
 
         public void SetMovementDuration(float duration)
         {
@@ -67,7 +67,6 @@ namespace GameJam.Gameplay
             failFeedbackDuration = level.FailFeedbackDuration;
             currentCoordinate = level.PlayerStart;
             completionPublished = false;
-            hasBufferedDirection = false;
             State = GameplayState.Playing;
             player.position = puzzleBoard.GetPlayerStandPosition(currentCoordinate);
             initialized = true;
@@ -89,12 +88,7 @@ namespace GameJam.Gameplay
 
             if (State == GameplayState.Moving)
             {
-                if (TryReadDirection(keyboard, out var queuedDirection))
-                {
-                    bufferedDirection = queuedDirection;
-                    hasBufferedDirection = true;
-                }
-
+                // Ignore additional input until the current jump has landed.
                 return;
             }
 
@@ -183,7 +177,6 @@ namespace GameJam.Gameplay
 
             player.position = targetPosition;
             State = GameplayState.Playing;
-            ConsumeBufferedMove();
         }
 
         private void ResolveLanding(TileSlot tile)
@@ -206,7 +199,6 @@ namespace GameJam.Gameplay
 
             if (result == ObjectiveMatchResult.Incorrect)
             {
-                hasBufferedDirection = false;
                 gameplayEvents.PublishChainFailed(snapshot);
                 StartCoroutine(FailAndReset());
                 return;
@@ -220,7 +212,6 @@ namespace GameJam.Gameplay
 
             if (result == ObjectiveMatchResult.ChainCompleted)
             {
-                hasBufferedDirection = false;
                 State = GameplayState.Completing;
                 if (!completionPublished)
                 {
@@ -251,21 +242,8 @@ namespace GameJam.Gameplay
             currentCoordinate = level.PlayerStart;
             player.position = puzzleBoard.GetPlayerStandPosition(currentCoordinate);
             completionPublished = false;
-            hasBufferedDirection = false;
             State = GameplayState.Playing;
             gameplayEvents.PublishChainReset();
-        }
-
-        private void ConsumeBufferedMove()
-        {
-            if (!hasBufferedDirection || State != GameplayState.Playing)
-            {
-                return;
-            }
-
-            var direction = bufferedDirection;
-            hasBufferedDirection = false;
-            TryMove(direction);
         }
 
         private static bool TryReadDirection(Keyboard keyboard, out Vector2Int direction)

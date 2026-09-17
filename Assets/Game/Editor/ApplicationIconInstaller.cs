@@ -2,26 +2,33 @@
 using UnityEditor;
 using UnityEngine;
 
-public static class ApplicationIconInstaller
+namespace GameJam.Editor
 {
-    private const string LogoPath = "Assets/Image/logo.png";
-
-    [MenuItem("Game Jam/Set Application Icon From Logo")]
-    public static void SetApplicationIcon()
+    public static class ApplicationIconInstaller
     {
-        var logo = AssetDatabase.LoadAssetAtPath<Texture2D>(LogoPath);
-        if (logo == null)
-        {
-            Debug.LogError($"Could not find application logo at {LogoPath}.");
-            return;
-        }
+        private const string IconPath = "Assets/Image/logo.png";
 
-        // Standalone Windows expects eight icon slots. Unity will scale the
-        // source texture for the required sizes when the same logo is used.
-        PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Standalone,
-            new[] { logo, logo, logo, logo, logo, logo, logo, logo });
-        EditorUtility.SetDirty(logo);
-        Debug.Log($"Application icon set from {LogoPath}.");
+        [MenuItem("Game Jam/Set Application Icon")]
+        public static void Install()
+        {
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(IconPath);
+            if (icon == null)
+            {
+                Debug.LogError($"Could not find application icon at {IconPath}.");
+                return;
+            }
+
+            // Standalone expects eight icon slots for the Windows icon mip sizes.
+            var icons = new Texture2D[8];
+            for (var index = 0; index < icons.Length; index++)
+            {
+                icons[index] = icon;
+            }
+
+            PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Standalone, icons);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"Application icon set to {IconPath} for Standalone.");
+        }
     }
 }
 #endif
