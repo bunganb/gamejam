@@ -13,14 +13,20 @@ namespace GameJam.Gameplay
             return levelIndex >= 0 && levelIndex <= HighestUnlockedLevel;
         }
 
-        public static void MarkReached(int levelIndex)
+        public static void MarkCompleted(int levelIndex)
         {
-            if (levelIndex <= HighestUnlockedLevel)
+            if (levelIndex < 0)
             {
                 return;
             }
 
-            PlayerPrefs.SetInt(HighestUnlockedLevelKey, levelIndex);
+            var nextLevelIndex = levelIndex + 1;
+            if (nextLevelIndex <= HighestUnlockedLevel)
+            {
+                return;
+            }
+
+            PlayerPrefs.SetInt(HighestUnlockedLevelKey, nextLevelIndex);
             PlayerPrefs.Save();
         }
     }

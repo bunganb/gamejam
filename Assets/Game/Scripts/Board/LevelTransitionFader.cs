@@ -79,6 +79,7 @@ namespace GameJam.Gameplay
                 return;
             }
 
+            Time.timeScale = 1f;
             SceneManager.LoadScene("MainMenu");
         }
 

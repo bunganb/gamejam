@@ -13,6 +13,11 @@ public class MenuDirector : MonoBehaviour
     public TimelineAsset timelinePlay; // <-- Tambahan slot untuk Timeline Play
     [SerializeField] private GameObject creditsRoot;
 
+    private void Awake()
+    {
+        Time.timeScale = 1f;
+    }
+
     // --- FUNGSI UNTUK MEMBUKA (ANIMASI MAJU) ---
 
     public void BukaSetting()
