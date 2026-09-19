@@ -22,6 +22,7 @@ namespace GameJam.Gameplay
         private Vector2Int currentCoordinate;
         private bool initialized;
         private bool completionPublished;
+        private bool inputBlocked;
 
         public GameplayState State { get; private set; } = GameplayState.Playing;
         public Vector2Int CurrentCoordinate => currentCoordinate;
@@ -29,6 +30,11 @@ namespace GameJam.Gameplay
         public LevelDefinition Level => level;
         public float MovementDuration => movementDuration;
         public float MovementDurationMultiplier => movementDurationMultiplier;
+
+        public void SetInputBlocked(bool blocked)
+        {
+            inputBlocked = blocked;
+        }
 
         public void SetMovementDuration(float duration)
         {
@@ -86,7 +92,7 @@ namespace GameJam.Gameplay
                 return;
             }
 
-            if (State == GameplayState.Moving)
+            if (inputBlocked || State == GameplayState.Moving)
             {
                 // Ignore additional input until the current jump has landed.
                 return;
@@ -176,6 +182,7 @@ namespace GameJam.Gameplay
             }
 
             player.position = targetPosition;
+            gameplayEvents.PublishPlayerMoveCompleted();
             State = GameplayState.Playing;
         }
 

@@ -14,6 +14,7 @@ namespace GameJam.Gameplay
         [SerializeField] private string jumpClip = "LOMPAT";
         [SerializeField] private string winClip = "dance";
         [SerializeField] private bool synchronizeMovementToJumpClip = true;
+        [SerializeField, Min(0.1f)] private float jumpAnimationSpeed = 1.15f;
         [SerializeField, Min(0f)] private float animationFadeDuration = 0.06f;
         [SerializeField, Min(0f)] private float turnDuration = 0.12f;
         [SerializeField] private float modelForwardYawOffset;
@@ -92,11 +93,11 @@ namespace GameJam.Gameplay
             }
 
             gameplayEvents.PlayerMoveStarted -= HandlePlayerMoveStarted;
-            gameplayEvents.TileActivated -= HandleTileActivated;
+            gameplayEvents.PlayerMoveCompleted -= HandlePlayerMoveCompleted;
             gameplayEvents.ChainCompleted -= HandleChainCompleted;
             gameplayEvents.ChainReset -= HandleChainReset;
             gameplayEvents.PlayerMoveStarted += HandlePlayerMoveStarted;
-            gameplayEvents.TileActivated += HandleTileActivated;
+            gameplayEvents.PlayerMoveCompleted += HandlePlayerMoveCompleted;
             gameplayEvents.ChainCompleted += HandleChainCompleted;
             gameplayEvents.ChainReset += HandleChainReset;
         }
@@ -109,7 +110,6 @@ namespace GameJam.Gameplay
             }
 
             gameplayEvents.PlayerMoveStarted -= HandlePlayerMoveStarted;
-            gameplayEvents.TileActivated -= HandleTileActivated;
             gameplayEvents.ChainCompleted -= HandleChainCompleted;
             gameplayEvents.ChainReset -= HandleChainReset;
         }
@@ -117,7 +117,7 @@ namespace GameJam.Gameplay
         private void ConfigureClipStates()
         {
             ConfigureState(idleClip, WrapMode.Loop, 1f);
-            ConfigureState(jumpClip, WrapMode.Once, 1f);
+            ConfigureState(jumpClip, WrapMode.Once, jumpAnimationSpeed);
             ConfigureState(winClip, WrapMode.Loop, 1f);
         }
 
@@ -139,7 +139,8 @@ namespace GameJam.Gameplay
             if (synchronizeMovementToJumpClip && gameplayController != null && state != null)
             {
                 gameplayController.SetMovementDuration(
-                    state.length * gameplayController.MovementDurationMultiplier);
+                    state.length * gameplayController.MovementDurationMultiplier /
+                    Mathf.Max(0.1f, jumpAnimationSpeed));
             }
         }
 
@@ -151,11 +152,11 @@ namespace GameJam.Gameplay
             }
 
             FaceDirection(boardDirection);
-            ConfigureState(jumpClip, WrapMode.Once, 1f);
+            ConfigureState(jumpClip, WrapMode.Once, jumpAnimationSpeed);
             CrossFade(jumpClip);
         }
 
-        private void HandleTileActivated(Vector2Int coordinate, BeatColor color)
+        private void HandlePlayerMoveCompleted()
         {
             if (!winLocked)
             {

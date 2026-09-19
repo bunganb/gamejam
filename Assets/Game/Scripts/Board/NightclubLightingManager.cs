@@ -128,7 +128,9 @@ namespace GameJam.Gameplay
                 danceFloor?.SetPattern(DanceFloorPatternMode.Static, profile.HeningEmission * 0.18f, 0f);
             }
 
-            if (failurePulse > 0f)
+            // A late failure pulse can still be queued while the completion
+            // payoff starts. Never let that queued boo interrupt Full Groove.
+            if (failurePulse > 0f && state != StageReactionState.FullGroove)
             {
                 movingSpotlights?.SetTarget(0f, 0);
                 strobe?.SetEnabled(false);

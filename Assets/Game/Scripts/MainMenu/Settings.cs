@@ -48,6 +48,13 @@ public class Settings : MonoBehaviour
         Screen.fullScreen = isFullscreen;
     }
 
+    private void OnEnable()
+    {
+        // Re-apply saved values whenever this panel becomes active after a
+        // scene change or pause-menu open.
+        AudioSettingsRuntime.ApplySavedValues(mainMixer);
+    }
+
     private void SetFullscreen(bool isFullscreen)
     {
         // Mengubah mode layar Unity
@@ -66,7 +73,7 @@ public class Settings : MonoBehaviour
         int displayValue = Mathf.RoundToInt(percentage * 100);
         if (masterValueText != null) masterValueText.text = displayValue.ToString();
 
-        PlayerPrefs.SetFloat("MasterVolume", value);
+        AudioSettingsRuntime.Save(AudioSettingsRuntime.MasterKey, value);
 
         float dbVolume;
         if (percentage < 0.5f)
@@ -78,7 +85,7 @@ public class Settings : MonoBehaviour
             dbVolume = Mathf.Lerp(0f, 20f, (percentage - 0.5f) * 2f);
         }
         
-        if (mainMixer != null) mainMixer.SetFloat("MasterVol", dbVolume);
+        AudioSettingsRuntime.ApplyValue(mainMixer, "MasterVol", value);
     }
 
     private void UpdateSFXValue(float value)
@@ -89,7 +96,7 @@ public class Settings : MonoBehaviour
         int displayValue = Mathf.RoundToInt(percentage * 100);
         if (sfxValueText != null) sfxValueText.text = displayValue.ToString();
 
-        PlayerPrefs.SetFloat("SFXVolume", value);
+        AudioSettingsRuntime.Save(AudioSettingsRuntime.SfxKey, value);
 
         float dbVolume;
         if (percentage < 0.5f)
@@ -101,7 +108,7 @@ public class Settings : MonoBehaviour
             dbVolume = Mathf.Lerp(0f, 20f, (percentage - 0.5f) * 2f);
         }
         
-        if (mainMixer != null) mainMixer.SetFloat("SFXVol", dbVolume);
+        AudioSettingsRuntime.ApplyValue(mainMixer, "SFXVol", value);
     }
 
     private void UpdateBGMValue(float value)
@@ -112,7 +119,7 @@ public class Settings : MonoBehaviour
         int displayValue = Mathf.RoundToInt(percentage * 100);
         if (bgmValueText != null) bgmValueText.text = displayValue.ToString();
         
-        PlayerPrefs.SetFloat("BGMVolume", value);
+        AudioSettingsRuntime.Save(AudioSettingsRuntime.MusicKey, value);
 
         float dbVolume;
         if (percentage < 0.5f)
@@ -124,6 +131,6 @@ public class Settings : MonoBehaviour
             dbVolume = Mathf.Lerp(0f, 20f, (percentage - 0.5f) * 2f);
         }
         
-        if (mainMixer != null) mainMixer.SetFloat("MusicVol", dbVolume);
+        AudioSettingsRuntime.ApplyValue(mainMixer, "MusicVol", value);
     }
 }

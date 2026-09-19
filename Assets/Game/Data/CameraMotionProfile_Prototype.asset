@@ -21,6 +21,10 @@ MonoBehaviour:
   tileMoveZoomFov: 0.75
   tileMoveZoomDuration: 0.18
   tileMoveZoomInRatio: 0.38
+  landingBounceDuration: 0.22
+  landingBouncePosition: 0.045
+  landingBounceRotation: 0.8
+  landingBounceFov: 0.45
   notePulseFov: 0
   notePulseDuration: 0.16
   grooveDanceInterval: 2.4

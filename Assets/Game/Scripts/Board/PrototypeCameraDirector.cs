@@ -38,6 +38,9 @@ namespace GameJam.Gameplay
         private float tileMovePulseStartFov;
         private float tileMovePulseElapsed;
         private bool tileMovePulseActive;
+        private Vector3 landingPositionOffset;
+        private Vector3 landingRotationOffset;
+        private float landingFovOffset;
         private float noiseSeed;
         private Coroutine reactionRoutine;
         private Coroutine notePulseRoutine;
@@ -133,11 +136,11 @@ namespace GameJam.Gameplay
             EvaluateTileMoveZoom(Time.unscaledDeltaTime);
 
             transform.localPosition = baseLocalPosition +
-                                      ambientPositionOffset + reactionPositionOffset;
+                                      ambientPositionOffset + reactionPositionOffset + landingPositionOffset;
             transform.localRotation = baseLocalRotation * Quaternion.Euler(
-                ambientRotationOffset + reactionRotationOffset);
+                ambientRotationOffset + reactionRotationOffset + landingRotationOffset);
             targetCamera.fieldOfView = Mathf.Clamp(
-                baseFieldOfView + ambientFovOffset + tileMoveFovOffset + reactionFovOffset,
+                baseFieldOfView + ambientFovOffset + tileMoveFovOffset + reactionFovOffset + landingFovOffset,
                 25f,
                 80f);
         }
@@ -158,6 +161,9 @@ namespace GameJam.Gameplay
             tileMovePulseStartFov = 0f;
             tileMovePulseElapsed = 0f;
             tileMovePulseActive = false;
+            landingPositionOffset = Vector3.zero;
+            landingRotationOffset = Vector3.zero;
+            landingFovOffset = 0f;
             State = CameraMotionState.Idle;
             reactionPositionOffset = Vector3.zero;
             reactionRotationOffset = Vector3.zero;
@@ -198,6 +204,7 @@ namespace GameJam.Gameplay
 
             Unsubscribe();
             gameplayEvents.PlayerMoveStarted += HandlePlayerMoveStarted;
+            gameplayEvents.TileActivated += HandleTileActivated;
             gameplayEvents.ChainAdvanced += HandleChainAdvanced;
             gameplayEvents.ChainFailed += HandleChainFailed;
             gameplayEvents.ChainReset += HandleChainReset;
@@ -212,6 +219,7 @@ namespace GameJam.Gameplay
             }
 
             gameplayEvents.PlayerMoveStarted -= HandlePlayerMoveStarted;
+            gameplayEvents.TileActivated -= HandleTileActivated;
             gameplayEvents.ChainAdvanced -= HandleChainAdvanced;
             gameplayEvents.ChainFailed -= HandleChainFailed;
             gameplayEvents.ChainReset -= HandleChainReset;
@@ -229,6 +237,44 @@ namespace GameJam.Gameplay
             tileMovePulseStartFov = tileMoveFovOffset;
             tileMovePulseElapsed = 0f;
             tileMovePulseActive = profile.TileMoveZoomFov > 0f;
+        }
+
+        private void HandleTileActivated(Vector2Int coordinate, BeatColor color)
+        {
+            if (profile == null || profile.LandingBounceDuration <= 0f)
+                return;
+
+            StartLandingBounce();
+        }
+
+        private void StartLandingBounce()
+        {
+            StopCoroutine(nameof(LandingBounce));
+            StartCoroutine(LandingBounce());
+        }
+
+        private IEnumerator LandingBounce()
+        {
+            var elapsed = 0f;
+            var duration = Mathf.Max(0.05f, profile.LandingBounceDuration);
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                var normalized = Mathf.Clamp01(elapsed / duration);
+                var envelope = Mathf.Sin(normalized * Mathf.PI);
+                var impact = envelope * envelope;
+                landingPositionOffset = Vector3.down * (impact * profile.LandingBouncePosition);
+                landingRotationOffset = new Vector3(
+                    impact * profile.LandingBounceRotation,
+                    0f,
+                    -impact * profile.LandingBounceRotation * 0.35f);
+                landingFovOffset = -impact * profile.LandingBounceFov;
+                yield return null;
+            }
+
+            landingPositionOffset = Vector3.zero;
+            landingRotationOffset = Vector3.zero;
+            landingFovOffset = 0f;
         }
 
         private void EvaluateTileMoveZoom(float deltaTime)

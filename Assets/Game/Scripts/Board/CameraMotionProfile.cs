@@ -18,6 +18,12 @@ namespace GameJam.Gameplay
         [SerializeField, Min(0.05f)] private float tileMoveZoomDuration = 0.18f;
         [SerializeField, Range(0.2f, 0.7f)] private float tileMoveZoomInRatio = 0.38f;
 
+        [Header("Landing Bounce")]
+        [SerializeField, Min(0.05f)] private float landingBounceDuration = 0.22f;
+        [SerializeField, Min(0f)] private float landingBouncePosition = 0.045f;
+        [SerializeField, Min(0f)] private float landingBounceRotation = 0.8f;
+        [SerializeField, Min(0f)] private float landingBounceFov = 0.45f;
+
         [Header("Groove")]
         [SerializeField, Min(0f)] private float notePulseFov;
         [SerializeField, Min(0.01f)] private float notePulseDuration = 0.14f;
@@ -59,6 +65,10 @@ namespace GameJam.Gameplay
         public float TileMoveZoomFov => tileMoveZoomFov;
         public float TileMoveZoomDuration => tileMoveZoomDuration;
         public float TileMoveZoomInRatio => tileMoveZoomInRatio;
+        public float LandingBounceDuration => landingBounceDuration;
+        public float LandingBouncePosition => landingBouncePosition;
+        public float LandingBounceRotation => landingBounceRotation;
+        public float LandingBounceFov => landingBounceFov;
         public float NotePulseFov => notePulseFov;
         public float NotePulseDuration => notePulseDuration;
         public float GrooveDanceInterval => grooveDanceInterval;
@@ -96,6 +106,10 @@ namespace GameJam.Gameplay
             tileMoveZoomFov = 0.75f;
             tileMoveZoomDuration = 0.18f;
             tileMoveZoomInRatio = 0.38f;
+            landingBounceDuration = 0.22f;
+            landingBouncePosition = 0.045f;
+            landingBounceRotation = 0.8f;
+            landingBounceFov = 0.45f;
             notePulseFov = 0f;
             notePulseDuration = 0.16f;
             grooveDanceInterval = 2.4f;

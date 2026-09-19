@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 /// <summary>
@@ -209,5 +210,83 @@ public sealed class GraphicQualityRadioGroup : MonoBehaviour
         }
 
         QualitySettings.SetQualityLevel(Mathf.Clamp(qualityIndex, 0, qualityNames.Length - 1), true);
+
+        // The project currently contains Mobile and PC quality assets only.
+        // Keep the three UI choices useful by applying a small runtime profile
+        // on top of those assets instead of pretending Medium and High are the
+        // same setting.
+        switch (Mathf.Clamp(presetIndex, 0, 2))
+        {
+            case 0:
+                ApplyRuntimeProfile(
+                    renderScale: 0.80f,
+                    shadowDistance: 20f,
+                    lodBias: 0.7f,
+                    maximumLodLevel: 1,
+                    pixelLightCount: 1,
+                    shadowQuality: ShadowQuality.HardOnly,
+                    textureMipmapLimit: 1,
+                    reflectionProbes: false,
+                    softParticles: false,
+                    particleRaycastBudget: 64);
+                break;
+            case 1:
+                ApplyRuntimeProfile(
+                    renderScale: 0.90f,
+                    shadowDistance: 32f,
+                    lodBias: 1f,
+                    maximumLodLevel: 0,
+                    pixelLightCount: 2,
+                    shadowQuality: ShadowQuality.HardOnly,
+                    textureMipmapLimit: 0,
+                    reflectionProbes: true,
+                    softParticles: true,
+                    particleRaycastBudget: 128);
+                break;
+            default:
+                ApplyRuntimeProfile(
+                    renderScale: 1f,
+                    shadowDistance: 50f,
+                    lodBias: 2f,
+                    maximumLodLevel: 0,
+                    pixelLightCount: 4,
+                    shadowQuality: ShadowQuality.All,
+                    textureMipmapLimit: 0,
+                    reflectionProbes: true,
+                    softParticles: true,
+                    particleRaycastBudget: 256);
+                break;
+        }
+    }
+
+    private static void ApplyRuntimeProfile(
+        float renderScale,
+        float shadowDistance,
+        float lodBias,
+        int maximumLodLevel,
+        int pixelLightCount,
+        ShadowQuality shadowQuality,
+        int textureMipmapLimit,
+        bool reflectionProbes,
+        bool softParticles,
+        int particleRaycastBudget)
+    {
+        QualitySettings.shadowDistance = shadowDistance;
+        QualitySettings.lodBias = lodBias;
+        QualitySettings.maximumLODLevel = maximumLodLevel;
+        QualitySettings.pixelLightCount = pixelLightCount;
+        QualitySettings.shadows = shadowQuality;
+        QualitySettings.globalTextureMipmapLimit = textureMipmapLimit;
+        QualitySettings.realtimeReflectionProbes = reflectionProbes;
+        QualitySettings.softParticles = softParticles;
+        QualitySettings.particleRaycastBudget = particleRaycastBudget;
+        QualitySettings.anisotropicFiltering = textureMipmapLimit > 0
+            ? AnisotropicFiltering.Disable
+            : AnisotropicFiltering.Enable;
+
+        // This changes the internal render buffer, not the window resolution.
+        // It gives Low and Medium a predictable GPU saving while preserving UI
+        // layout and aspect ratio.
+        ScalableBufferManager.ResizeBuffers(renderScale, renderScale);
     }
 }

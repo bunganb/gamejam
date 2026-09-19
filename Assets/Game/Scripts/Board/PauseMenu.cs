@@ -53,6 +53,11 @@ public class PauseMenu : MonoBehaviour
         Resume();
     }
 
+    private void OnEnable()
+    {
+        AudioSettingsRuntime.ApplySavedValues(audioMixer);
+    }
+
     private void BindPauseButtons()
     {
         if (pauseMenuUI == null) return;
@@ -119,7 +124,7 @@ public class PauseMenu : MonoBehaviour
         
         if (masterValueText != null) masterValueText.text = displayValue.ToString();
 
-        PlayerPrefs.SetFloat("MasterVolume", value);
+        AudioSettingsRuntime.Save(AudioSettingsRuntime.MasterKey, value);
 
         float dbVolume;
         if (percentage < 0.5f)
@@ -127,7 +132,7 @@ public class PauseMenu : MonoBehaviour
         else
             dbVolume = Mathf.Lerp(0f, 20f, (percentage - 0.5f) * 2f);
 
-        if (audioMixer != null) audioMixer.SetFloat("MasterVol", dbVolume);
+        AudioSettingsRuntime.ApplyValue(audioMixer, "MasterVol", value);
     }
 
     public void SetSFXVolume(float value)
@@ -137,7 +142,7 @@ public class PauseMenu : MonoBehaviour
         
         if (sfxValueText != null) sfxValueText.text = displayValue.ToString();
 
-        PlayerPrefs.SetFloat("SFXVolume", value);
+        AudioSettingsRuntime.Save(AudioSettingsRuntime.SfxKey, value);
 
         float dbVolume;
         if (percentage < 0.5f)
@@ -145,7 +150,7 @@ public class PauseMenu : MonoBehaviour
         else
             dbVolume = Mathf.Lerp(0f, 20f, (percentage - 0.5f) * 2f);
 
-        if (audioMixer != null) audioMixer.SetFloat("SFXVol", dbVolume);
+        AudioSettingsRuntime.ApplyValue(audioMixer, "SFXVol", value);
     }
 
     public void SetMusicVolume(float value)
@@ -155,7 +160,7 @@ public class PauseMenu : MonoBehaviour
         
         if (musicValueText != null) musicValueText.text = displayValue.ToString();
 
-        PlayerPrefs.SetFloat("BGMVolume", value);
+        AudioSettingsRuntime.Save(AudioSettingsRuntime.MusicKey, value);
 
         float dbVolume;
         if (percentage < 0.5f)
@@ -163,7 +168,7 @@ public class PauseMenu : MonoBehaviour
         else
             dbVolume = Mathf.Lerp(0f, 20f, (percentage - 0.5f) * 2f);
 
-        if (audioMixer != null) audioMixer.SetFloat("MusicVol", dbVolume);
+        AudioSettingsRuntime.ApplyValue(audioMixer, "MusicVol", value);
     }
 
     public void LoadMainMenu()
