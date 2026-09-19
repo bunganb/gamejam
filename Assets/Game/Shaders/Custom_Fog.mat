@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RadialLevelTransition
-  m_Shader: {fileID: 4800000, guid: 6405b3420c00f8e46ac50d5d9bc800e7, type: 3}
+  m_Name: Custom_Fog
+  m_Shader: {fileID: 4800000, guid: 35f00b26fd7ec964ab0d25d39a3d7242, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,16 +23,17 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _MainTex:
+    - _BaseMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Radius: 2
-    - _Softness: 0.08
+    - _NoiseContrast: 1.4
+    - _NoiseScale: 1.5
+    - _Opacity: 0.55
     m_Colors:
-    - _Center: {r: 0.5118017, g: 0.5969758, b: 0, a: 0}
-    - _Color: {r: 0, g: 0, b: 0, a: 1}
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 0.55}
+    - _NoiseSpeed: {r: 0.035, g: 0.012, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

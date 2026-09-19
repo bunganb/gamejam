@@ -15,9 +15,10 @@ public class ComboTierManager : MonoBehaviour
     [Header("Pengaturan")]
     public float failDisplayTime = 1f; // Berapa lama tulisan fail muncul di layar
     [SerializeField, Min(0.01f)] private float comboIntroDuration = 0.2f;
+    [SerializeField, Min(0f)] private float comboDisplayDuration = 0.5f;
+    [SerializeField, Min(0.01f)] private float comboPulseDuration = 0.5f;
+    [SerializeField, Range(1f, 1.2f)] private float comboPulseScale = 1.05f;
     [SerializeField, Min(0.01f)] private float comboOutroDuration = 0.16f;
-    [SerializeField, Min(1f)] private float comboIdleScale = 1.06f;
-    [SerializeField, Min(0.01f)] private float comboIdleDuration = 0.5f;
 
     [Header("Gameplay Events")]
     [SerializeField] private PuzzleGameplayEvents gameplayEvents;
@@ -214,7 +215,10 @@ public class ComboTierManager : MonoBehaviour
             canvasGroup.alpha = 1f;
 
             yield return AnimateIntro(targetTier, canvasGroup, baseScale);
-            comboAnimation = StartCoroutine(IdleComboTier(targetTier, canvasGroup, baseScale));
+            yield return AnimateDisplay(targetTier, canvasGroup, baseScale);
+            yield return AnimateOut(targetTier, canvasGroup, baseScale);
+            targetTier.SetActive(false);
+            comboAnimation = null;
         }
         else
         {
@@ -238,6 +242,22 @@ public class ComboTierManager : MonoBehaviour
         tier.transform.localScale = baseScale;
     }
 
+    private IEnumerator AnimateDisplay(GameObject tier, CanvasGroup canvasGroup, Vector3 baseScale)
+    {
+        float elapsed = 0f;
+        while (elapsed < comboDisplayDuration)
+        {
+            elapsed += Time.deltaTime;
+            float pulseProgress = (elapsed % comboPulseDuration) / comboPulseDuration;
+            float pulse = (1f - Mathf.Cos(pulseProgress * Mathf.PI * 2f)) * 0.5f;
+            tier.transform.localScale = Vector3.LerpUnclamped(baseScale, baseScale * comboPulseScale, pulse);
+            canvasGroup.alpha = 1f;
+            yield return null;
+        }
+
+        tier.transform.localScale = baseScale;
+    }
+
     private IEnumerator AnimateOut(GameObject tier, CanvasGroup canvasGroup, Vector3 baseScale)
     {
         float elapsed = 0f;
@@ -254,17 +274,6 @@ public class ComboTierManager : MonoBehaviour
 
         tier.transform.localScale = baseScale;
         canvasGroup.alpha = 0f;
-    }
-
-    private IEnumerator IdleComboTier(GameObject tier, CanvasGroup canvasGroup, Vector3 baseScale)
-    {
-        while (activeComboTier == tier && tier.activeSelf)
-        {
-            float progress = (Mathf.Sin(Time.time * Mathf.PI * 2f / comboIdleDuration) + 1f) * 0.5f;
-            tier.transform.localScale = Vector3.Lerp(baseScale, baseScale * comboIdleScale, progress);
-            canvasGroup.alpha = 1f;
-            yield return null;
-        }
     }
 
     private void ResetComboTiers()
