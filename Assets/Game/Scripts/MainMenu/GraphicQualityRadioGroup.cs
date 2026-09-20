@@ -5,56 +5,51 @@ using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 /// <summary>
-/// Three-option graphics selector for the settings menu.
-/// The ToggleGroup guarantees that only one quality option is selected.
+/// Horizontal Option Selector untuk memilih preset kualitas grafik.
+/// Menggunakan tombol panah kiri/kanan dan Teks nilai.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class GraphicQualityRadioGroup : MonoBehaviour
 {
-    private const string QualityPreferenceKey = "GraphicsQualityPreset";
+    [Header("UI References")]
+    [SerializeField] private TMP_Text valueText;
+    [SerializeField] private Button leftButton;
+    [SerializeField] private Button rightButton;
 
-    [SerializeField] private ToggleGroup toggleGroup;
-    [SerializeField] private Toggle[] options = Array.Empty<Toggle>();
-    [SerializeField] private TMP_Text[] optionLabels = Array.Empty<TMP_Text>();
+    [Header("Configuration")]
+    [SerializeField] private string qualityPreferenceKey = "GraphicsQualityPreset";
     [SerializeField] private string[] labels = { "LOW", "MEDIUM", "HIGH" };
+    [SerializeField] private int defaultIndex = 1; // Default: MEDIUM
 
-    private bool isApplyingSelection;
+    private int currentIndex;
+
+    private void ResolveButtonReferences()
+    {
+        var buttons = GetComponentsInChildren<Button>(true);
+        foreach (var button in buttons)
+        {
+            var buttonName = button.name.ToLowerInvariant();
+            if (leftButton == null && (buttonName.Contains("left") || buttonName.Contains("previous") || buttonName.Contains("back")))
+            {
+                leftButton = button;
+            }
+
+            if (rightButton == null && (buttonName.Contains("right") || buttonName.Contains("next") || buttonName.Contains("forward")))
+            {
+                rightButton = button;
+            }
+        }
+
+        if (buttons.Length >= 2)
+        {
+            leftButton ??= buttons[0];
+            rightButton ??= buttons[buttons.Length - 1];
+        }
+    }
 
     private void Awake()
     {
-        if (toggleGroup == null)
-        {
-            toggleGroup = GetComponent<ToggleGroup>();
-        }
-
-        if (options == null || options.Length == 0)
-        {
-            options = GetComponentsInChildren<Toggle>(true);
-        }
-
-        if (optionLabels == null || optionLabels.Length == 0)
-        {
-            optionLabels = GetComponentsInChildren<TMP_Text>(true);
-            var filteredLabels = new System.Collections.Generic.List<TMP_Text>();
-            foreach (var label in optionLabels)
-            {
-                if (label != null && label.name.StartsWith("OptionLabel_", StringComparison.Ordinal))
-                {
-                    filteredLabels.Add(label);
-                }
-            }
-
-            optionLabels = filteredLabels.ToArray();
-        }
-
-        if (toggleGroup != null)
-        {
-            toggleGroup.allowSwitchOff = false;
-        }
-
-        ConfigureOptions();
-
-        SetLabels();
+        ResolveButtonReferences();
         RegisterListeners();
         ApplySavedSelection();
     }
@@ -66,119 +61,75 @@ public sealed class GraphicQualityRadioGroup : MonoBehaviour
 
     private void RegisterListeners()
     {
-        if (options == null)
+        if (leftButton != null)
         {
-            return;
+            leftButton.onClick.AddListener(PreviousOption);
         }
 
-        foreach (var option in options)
+        if (rightButton != null)
         {
-            if (option != null)
-            {
-                option.onValueChanged.AddListener(HandleOptionChanged);
-            }
-        }
-    }
-
-    private void ConfigureOptions()
-    {
-        if (options == null)
-        {
-            return;
-        }
-
-        foreach (var option in options)
-        {
-            if (option == null)
-            {
-                continue;
-            }
-
-            option.group = toggleGroup;
-            if (option.graphic == null)
-            {
-                var checkmark = option.transform.Find("Checkmark");
-                if (checkmark != null)
-                {
-                    option.graphic = checkmark.GetComponent<Image>();
-                }
-            }
+            rightButton.onClick.AddListener(NextOption);
         }
     }
 
     private void UnregisterListeners()
     {
-        if (options == null)
+        if (leftButton != null)
         {
-            return;
+            leftButton.onClick.RemoveListener(PreviousOption);
         }
 
-        foreach (var option in options)
+        if (rightButton != null)
         {
-            if (option != null)
-            {
-                option.onValueChanged.RemoveListener(HandleOptionChanged);
-            }
+            rightButton.onClick.RemoveListener(NextOption);
         }
     }
 
-    private void SetLabels()
+    public void NextOption()
     {
-        if (optionLabels == null || labels == null)
+        if (labels == null || labels.Length == 0) return;
+
+        currentIndex = (currentIndex + 1) % labels.Length;
+        UpdateUIAndApplyQuality();
+    }
+
+    public void PreviousOption()
+    {
+        if (labels == null || labels.Length == 0) return;
+
+        currentIndex--;
+        if (currentIndex < 0)
         {
-            return;
+            currentIndex = labels.Length - 1;
         }
 
-        var count = Mathf.Min(optionLabels.Length, labels.Length);
-        for (var index = 0; index < count; index++)
-        {
-            if (optionLabels[index] != null)
-            {
-                optionLabels[index].text = labels[index];
-            }
-        }
+        UpdateUIAndApplyQuality();
     }
 
     private void ApplySavedSelection()
     {
-        if (options == null || options.Length == 0)
-        {
-            return;
-        }
+        if (labels == null || labels.Length == 0) return;
 
-        var selectedIndex = PlayerPrefs.GetInt(QualityPreferenceKey, 1);
-        selectedIndex = Mathf.Clamp(selectedIndex, 0, options.Length - 1);
+        currentIndex = PlayerPrefs.GetInt(qualityPreferenceKey, defaultIndex);
+        currentIndex = Mathf.Clamp(currentIndex, 0, labels.Length - 1);
 
-        isApplyingSelection = true;
-        for (var index = 0; index < options.Length; index++)
-        {
-            if (options[index] != null)
-            {
-                options[index].SetIsOnWithoutNotify(index == selectedIndex);
-            }
-        }
-
-        isApplyingSelection = false;
-        ApplyQualityPreset(selectedIndex);
+        UpdateUIAndApplyQuality();
     }
 
-    private void HandleOptionChanged(bool isOn)
+    private void UpdateUIAndApplyQuality()
     {
-        if (!isOn || isApplyingSelection || options == null)
+        // Update tampilan teks
+        if (valueText != null && labels.Length > 0)
         {
-            return;
+            valueText.text = labels[currentIndex];
         }
 
-        for (var index = 0; index < options.Length; index++)
-        {
-            if (options[index] != null && options[index].isOn)
-            {
-                PlayerPrefs.SetInt(QualityPreferenceKey, index);
-                PlayerPrefs.Save();
-                ApplyQualityPreset(index);
-                return;
-            }
-        }
+        // Simpan ke PlayerPrefs
+        PlayerPrefs.SetInt(qualityPreferenceKey, currentIndex);
+        PlayerPrefs.Save();
+
+        // Terapkan ke Unity Quality Settings
+        ApplyQualityPreset(currentIndex);
     }
 
     private static void ApplyQualityPreset(int presetIndex)
@@ -211,10 +162,6 @@ public sealed class GraphicQualityRadioGroup : MonoBehaviour
 
         QualitySettings.SetQualityLevel(Mathf.Clamp(qualityIndex, 0, qualityNames.Length - 1), true);
 
-        // The project currently contains Mobile and PC quality assets only.
-        // Keep the three UI choices useful by applying a small runtime profile
-        // on top of those assets instead of pretending Medium and High are the
-        // same setting.
         switch (Mathf.Clamp(presetIndex, 0, 2))
         {
             case 0:
@@ -284,9 +231,6 @@ public sealed class GraphicQualityRadioGroup : MonoBehaviour
             ? AnisotropicFiltering.Disable
             : AnisotropicFiltering.Enable;
 
-        // This changes the internal render buffer, not the window resolution.
-        // It gives Low and Medium a predictable GPU saving while preserving UI
-        // layout and aspect ratio.
         ScalableBufferManager.ResizeBuffers(renderScale, renderScale);
     }
 }
