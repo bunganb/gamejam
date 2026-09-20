@@ -12,6 +12,10 @@ public class PauseMenu : MonoBehaviour
     public Button resumeButton;
     public Button exitButton;
 
+    [Header("UI Panel Setting")]
+    [SerializeField] private GameObject settingPanelUI; // GameObject untuk panel setting
+    [SerializeField] private Button closeSettingButton;  // Button untuk menutup panel setting
+
     [Header("Audio Mixer")]
     public AudioMixer audioMixer; // Masukkan file AudioMixer kamu
 
@@ -50,6 +54,16 @@ public class PauseMenu : MonoBehaviour
         if (musicSlider != null) SetMusicVolume(musicSlider.value);
 
         BindPauseButtons();
+
+        // Daftarkan listener untuk tombol close setting secara otomatis jika diisi via Inspector
+        if (closeSettingButton != null)
+        {
+            closeSettingButton.onClick.AddListener(TutupSetting);
+        }
+
+        // Pastikan panel setting tertutup di awal
+        if (settingPanelUI != null) settingPanelUI.SetActive(false);
+
         Resume();
     }
 
@@ -90,6 +104,12 @@ public class PauseMenu : MonoBehaviour
         // Tombol ESC untuk Pause / Unpause
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
+            if (settingPanelUI != null && settingPanelUI.activeSelf)
+            {
+                TutupSetting();
+                return;
+            }
+
             if (isPaused)
             {
                 Resume();
@@ -103,6 +123,7 @@ public class PauseMenu : MonoBehaviour
 
     public void Resume()
     {
+        if (settingPanelUI != null) settingPanelUI.SetActive(false);
         if (pauseMenuUI != null) pauseMenuUI.SetActive(false);
         Time.timeScale = 1f; 
         isPaused = false;
@@ -113,6 +134,24 @@ public class PauseMenu : MonoBehaviour
         if (pauseMenuUI != null) pauseMenuUI.SetActive(true);
         Time.timeScale = 0f; 
         isPaused = true;
+    }
+
+    // --- FUNGSI PENGATURAN SETTING ---
+
+    public void BukaSetting()
+    {
+        if (settingPanelUI != null)
+        {
+            settingPanelUI.SetActive(true);
+        }
+    }
+
+    public void TutupSetting()
+    {
+        if (settingPanelUI != null)
+        {
+            settingPanelUI.SetActive(false);
+        }
     }
 
     // --- PENGATURAN AUDIO & TEKS (0 - 100) ---
