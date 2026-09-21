@@ -188,7 +188,8 @@ namespace GameJam.Gameplay
 
         private void ResolveLanding(TileSlot tile)
         {
-            var actualColor = tile.AdvanceColor();
+            puzzleBoard.AdvanceAllActiveTiles();
+            var actualColor = tile.CurrentColor;
             var resolvedRow = progressTracker.CurrentRowIndex;
             var resolvedNote = progressTracker.CurrentNoteIndex;
             var expectedColor = progressTracker.ExpectedColor;

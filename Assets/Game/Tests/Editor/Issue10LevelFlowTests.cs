@@ -69,6 +69,8 @@ namespace GameJam.Gameplay.Tests
             new(3, 3)
         };
 
+        private static readonly long[] ExpectedSolutionCounts = { 5, 5, 4, 4, 3, 2 };
+
         private readonly List<Object> disposables = new();
 
         [TearDown]
@@ -102,6 +104,10 @@ namespace GameJam.Gameplay.Tests
 
                 Assert.That(level.ExpectedSolution.Count, Is.EqualTo(level.TotalNotes));
                 Assert.That(LevelSolutionValidator.TryValidate(level, out var error), Is.True, error);
+                Assert.That(
+                    LevelSolutionValidator.CountValidSolutions(level, 6),
+                    Is.EqualTo(ExpectedSolutionCounts[levelIndex]),
+                    $"{level.LevelId} route count must stay inside the authored difficulty target.");
             }
         }
 

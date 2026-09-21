@@ -478,9 +478,15 @@ namespace GameJam.Editor
                     throw new InvalidOperationException($"Authored solution enters inactive cell {coordinate}.");
                 }
 
-                var cellIndex = LevelDefinition.ToIndex(coordinate);
-                runtimeColors[cellIndex] = runtimeColors[cellIndex].Next();
-                notes.Add(runtimeColors[cellIndex]);
+                for (var colorIndex = 0; colorIndex < runtimeColors.Length; colorIndex++)
+                {
+                    if (cells[colorIndex].IsActive)
+                    {
+                        runtimeColors[colorIndex] = runtimeColors[colorIndex].Next();
+                    }
+                }
+
+                notes.Add(runtimeColors[LevelDefinition.ToIndex(coordinate)]);
             }
 
             var rows = new ObjectiveRowDefinition[rowLengths.Count];

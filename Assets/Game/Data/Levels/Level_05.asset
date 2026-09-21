@@ -35,20 +35,6 @@ MonoBehaviour:
   - isActive: 1
     initialColor: 2
   - isActive: 1
-    initialColor: 0
-  - isActive: 1
-    initialColor: 1
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 1
-    initialColor: 1
-  - isActive: 1
     initialColor: 2
   - isActive: 1
     initialColor: 0
@@ -61,41 +47,55 @@ MonoBehaviour:
   - isActive: 0
     initialColor: 0
   - isActive: 1
-    initialColor: 0
-  - isActive: 1
-    initialColor: 1
-  - isActive: 1
-    initialColor: 2
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 1
-    initialColor: 1
-  - isActive: 1
     initialColor: 2
   - isActive: 1
     initialColor: 0
   - isActive: 1
-    initialColor: 1
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 0
   - isActive: 1
     initialColor: 2
+  - isActive: 1
+    initialColor: 1
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 1
   - isActive: 0
     initialColor: 0
   - isActive: 0
     initialColor: 0
   - isActive: 1
-    initialColor: 0
-  - isActive: 1
-    initialColor: 1
-  - isActive: 1
     initialColor: 2
   - isActive: 1
     initialColor: 0
   - isActive: 1
-    initialColor: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 2
   - isActive: 0
     initialColor: 0
   - isActive: 0
@@ -114,10 +114,10 @@ MonoBehaviour:
     initialColor: 0
   playerStart: {x: 3, y: 5}
   objectiveRows:
-  - notes: 02000000010000000200000000000000
-  - notes: 0100000002000000
+  - notes: 01000000010000000100000002000000
+  - notes: 0200000002000000
   - notes: 0000000001000000
-  - notes: 0200000001000000
+  - notes: 0000000001000000
   expectedSolution: 02000000020000000100000003000000010000000100000001000000030000000300000000000000
   failFeedbackDuration: 0.75
   completionHoldDuration: 2.5

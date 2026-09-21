@@ -76,7 +76,7 @@ namespace GameJam.Editor
                     "Hey! I'm Carl. See those colors up there? That’s your Goal Chain!",
                     AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Image/up_there.png"), led, null);
                 ConfigureLine(lines.GetArrayElementAtIndex(1), "Rules", 
-                    "Follow the colors in the right order! Get the whole chain right and make this graveyard PARTY!",
+                    "Every move shifts ALL active tiles to their next color! Plan where you land, follow the Goal Chain, and make this graveyard PARTY!",
                     AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Image/aha.png"), null, rules.GetComponent<RectTransform>());
                 ConfigureLine(lines.GetArrayElementAtIndex(2), "Break", 
                     "Oops! One wrong color breaks the chain! Complete it! Good Luck!",

@@ -270,9 +270,9 @@ RectTransform:
   - {fileID: 1269218575}
   m_Father: {fileID: 736585402}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125.5, y: -255}
   m_SizeDelta: {x: 251, y: 66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &32698964
@@ -1149,9 +1149,9 @@ RectTransform:
   - {fileID: 443300912}
   m_Father: {fileID: 736585402}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125.5, y: -75}
   m_SizeDelta: {x: 251, y: 66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &203042132
@@ -1406,6 +1406,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b9a305e18de0c04dbd257a21cd47087, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Postprocessing.Runtime::UnityEngine.Rendering.PostProcessing.PostProcessVolume
+  sharedProfile: {fileID: 0}
+  isGlobal: 0
+  blendDistance: 0
+  weight: 1
+  priority: 0
 --- !u!4 &254133551
 Transform:
   m_ObjectHideFlags: 0
@@ -1414,12 +1419,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 254133549}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.25, y: 0, z: 1.85}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1434135115}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &276081584
 GameObject:
@@ -7065,12 +7070,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 426853193}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.71, y: 0.49, z: -0.93}
-  m_LocalScale: {x: 0.75371414, y: 0.75371414, z: 0.75371414}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -5.990002, y: 0.427496, z: -0.8302089}
+  m_LocalScale: {x: 0.6728389, y: 0.6728389, z: 0.6728389}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1758053420}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &439734572
 PrefabInstance:
@@ -9673,12 +9678,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 798885514}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.063, y: 4.95, z: -0.76}
   m_LocalScale: {x: 2.8031, y: 2.8031, z: 2.8031}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1434135115}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &805979199
 PrefabInstance:
@@ -18303,12 +18308,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1316139350}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.94, y: 0.49, z: -0.93}
-  m_LocalScale: {x: 0.75371414, y: 0.75371414, z: 0.75371414}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 6.1953225, y: 0.427496, z: -0.8302089}
+  m_LocalScale: {x: 0.6728389, y: 0.6728389, z: 0.6728389}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1758053420}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1316444382
 GameObject:
@@ -19085,6 +19090,8 @@ Transform:
   - {fileID: 1931462826}
   - {fileID: 1448811593}
   - {fileID: 959895543}
+  - {fileID: 254133551}
+  - {fileID: 798885516}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1440156164
@@ -21130,9 +21137,9 @@ RectTransform:
   - {fileID: 1834565737}
   m_Father: {fileID: 736585402}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125.5, y: -165}
   m_SizeDelta: {x: 251, y: 66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1692185465
@@ -21895,6 +21902,9 @@ Transform:
   - {fileID: 223052757}
   - {fileID: 543450653580553068}
   - {fileID: 584297106}
+  - {fileID: 426853196}
+  - {fileID: 1316139353}
+  - {fileID: 2100316514}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1764641939
@@ -23072,8 +23082,8 @@ MonoBehaviour:
     worldHighlightTarget: {fileID: 543450653580553068}
     uiHighlightTarget: {fileID: 0}
   - id: Rules
-    message: Follow the colors in the right order! Get the whole chain right and
-      make this graveyard PARTY!
+    message: Every move shifts ALL active tiles to their next color! Plan where you
+      land, follow the Goal Chain, and make this graveyard PARTY!
     carlSprite: {fileID: 21300000, guid: c522bdfe23578454c8032b2236c0440a, type: 3}
     worldHighlightTarget: {fileID: 0}
     uiHighlightTarget: {fileID: 1291344531}
@@ -29754,12 +29764,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2100316511}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.16, y: 0.49, z: -5.84}
-  m_LocalScale: {x: 0.75371414, y: 0.75371414, z: 0.75371414}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0.14283164, y: 0.427496, z: -5.213355}
+  m_LocalScale: {x: 0.6728389, y: 0.6728389, z: 0.6728389}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1758053420}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1001 &2103016800
 PrefabInstance:
@@ -30834,8 +30844,3 @@ SceneRoots:
   - {fileID: 426833865}
   - {fileID: 1379203802}
   - {fileID: 2089246639}
-  - {fileID: 254133551}
-  - {fileID: 798885516}
-  - {fileID: 426853196}
-  - {fileID: 1316139353}
-  - {fileID: 2100316514}

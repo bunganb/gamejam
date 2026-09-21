@@ -129,9 +129,8 @@ namespace GameJam.Gameplay.Tests
         }
 
         [Test]
-        public void PrototypeSolution_UsesNewTileColorAndCompletesAllObjectives()
+        public void PrototypeSolution_GlobalShiftCompletesAllObjectives()
         {
-            var tracker = CreateTracker();
             var colors = new Dictionary<Vector2Int, BeatColor>
             {
                 [new Vector2Int(2, 2)] = BeatColor.Yellow,
@@ -144,6 +143,15 @@ namespace GameJam.Gameplay.Tests
                 [new Vector2Int(3, 4)] = BeatColor.Blue,
                 [new Vector2Int(4, 4)] = BeatColor.Blue
             };
+            var tracker = new ObjectiveProgressTracker(new[]
+            {
+                new ObjectiveRowDefinition(
+                    BeatColor.Magenta, BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta),
+                new ObjectiveRowDefinition(
+                    BeatColor.Magenta, BeatColor.Blue, BeatColor.Yellow, BeatColor.Magenta),
+                new ObjectiveRowDefinition(
+                    BeatColor.Yellow, BeatColor.Magenta, BeatColor.Blue)
+            });
             var directions = new[]
             {
                 Vector2Int.down, Vector2Int.left, Vector2Int.up, Vector2Int.up,
@@ -155,7 +163,11 @@ namespace GameJam.Gameplay.Tests
             foreach (var direction in directions)
             {
                 coordinate += direction;
-                colors[coordinate] = colors[coordinate].Next();
+                var coordinates = new List<Vector2Int>(colors.Keys);
+                foreach (var tileCoordinate in coordinates)
+                {
+                    colors[tileCoordinate] = colors[tileCoordinate].Next();
+                }
                 Assert.That(tracker.Resolve(colors[coordinate]), Is.Not.EqualTo(ObjectiveMatchResult.Incorrect));
             }
 

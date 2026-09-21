@@ -45,27 +45,27 @@ MonoBehaviour:
   - isActive: 0
     initialColor: 0
   - isActive: 1
-    initialColor: 1
+    initialColor: 0
   - isActive: 1
     initialColor: 2
-  - isActive: 1
-    initialColor: 0
-  - isActive: 1
-    initialColor: 1
-  - isActive: 1
-    initialColor: 2
-  - isActive: 0
-    initialColor: 0
-  - isActive: 0
-    initialColor: 0
-  - isActive: 1
-    initialColor: 0
   - isActive: 1
     initialColor: 1
   - isActive: 1
     initialColor: 2
   - isActive: 1
     initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 0
+    initialColor: 0
+  - isActive: 1
+    initialColor: 1
+  - isActive: 1
+    initialColor: 2
+  - isActive: 1
+    initialColor: 0
+  - isActive: 1
+    initialColor: 0
   - isActive: 1
     initialColor: 1
   - isActive: 0
@@ -75,7 +75,7 @@ MonoBehaviour:
   - isActive: 0
     initialColor: 0
   - isActive: 1
-    initialColor: 0
+    initialColor: 1
   - isActive: 0
     initialColor: 0
   - isActive: 0
@@ -114,9 +114,9 @@ MonoBehaviour:
     initialColor: 0
   playerStart: {x: 1, y: 3}
   objectiveRows:
-  - notes: 02000000000000000100000002000000
-  - notes: 00000000020000000100000000000000
-  - notes: 020000000100000000000000
+  - notes: 01000000010000000100000000000000
+  - notes: 02000000010000000100000002000000
+  - notes: 020000000200000001000000
   expectedSolution: 0100000003000000030000000300000003000000000000000200000002000000020000000000000001000000
   failFeedbackDuration: 0.75
   completionHoldDuration: 2.5

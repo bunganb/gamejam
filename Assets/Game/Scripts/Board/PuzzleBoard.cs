@@ -81,6 +81,28 @@ namespace GameJam.Gameplay
             }
         }
 
+        /// <summary>
+        /// Advances every active pad by one deterministic color step. The board
+        /// changes as a single logical beat; presentation can animate the same
+        /// state change without affecting puzzle resolution order.
+        /// </summary>
+        public void AdvanceAllActiveTiles()
+        {
+            if (activeLevel == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < indexedSlots.Length; index++)
+            {
+                var tile = indexedSlots[index];
+                if (tile != null && tile.IsActiveCell)
+                {
+                    tile.AdvanceColor();
+                }
+            }
+        }
+
         public bool IsCellActive(Vector2Int coordinate)
         {
             return TryGetTile(coordinate, out _);
