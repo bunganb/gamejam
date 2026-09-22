@@ -187,9 +187,9 @@ namespace GameJam.Editor
             {
                 BuildMusicProfile(
                     1, 130f, 2, 8,
-                    "Level_1/1_Harmony.wav", null, 1f,
-                    "Level_1/5_BassGuitar.wav", null, -1,
-                    "Level_1/6_FullSong.wav",
+                    "Level_1/1_HARMONY.wav", null, 1f,
+                    null, null, -1,
+                    "Level_1/5_FULLSONG.wav",
                     new[]
                     {
                         "Magenta_Kick.wav", "Magenta_Kick.wav", "Magenta_Kick.wav", "Magenta_Kick.wav",

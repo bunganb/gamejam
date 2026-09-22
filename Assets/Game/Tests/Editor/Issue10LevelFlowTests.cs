@@ -134,6 +134,33 @@ namespace GameJam.Gameplay.Tests
         }
 
         [Test]
+        public void LevelOneMusic_UsesRevisedClipsAndRecutSamples()
+        {
+            var level = LoadLevel(0);
+            var music = AssetDatabase.LoadAssetAtPath<LevelMusicDefinition>(MusicPaths[0]);
+            Assert.That(music, Is.Not.Null);
+            Assert.That(music.BaseHarmony,
+                Is.SameAs(AssetDatabase.LoadAssetAtPath<AudioClip>(
+                    "Assets/Game/Art/Beat/Level_1/1_HARMONY.wav")));
+            Assert.That(music.FullSong,
+                Is.SameAs(AssetDatabase.LoadAssetAtPath<AudioClip>(
+                    "Assets/Game/Art/Beat/Level_1/5_FULLSONG.wav")));
+            Assert.That(music.BuildLayer, Is.Null, "The revised delivery has no isolated bass stem.");
+            Assert.That(music.NoteSamples.Count, Is.EqualTo(level.TotalNotes));
+            Assert.That(music.FullSong.length, Is.EqualTo(music.BaseHarmony.length).Within(.02f));
+            Assert.That(music.BaseHarmony.length,
+                Is.EqualTo(16f * 60f / music.Bpm).Within(.02f));
+
+            foreach (var sample in music.NoteSamples)
+            {
+                Assert.That(sample, Is.Not.Null);
+                Assert.That(sample.length, Is.GreaterThan(.15f).And.LessThan(.35f));
+            }
+
+            Assert.That(music.TryValidate(level.TotalNotes, out var error), Is.True, error);
+        }
+
+        [Test]
         public void Validator_RejectsSolutionThatEntersInactiveTile()
         {
             var level = ScriptableObject.CreateInstance<LevelDefinition>();
@@ -268,6 +295,39 @@ namespace GameJam.Gameplay.Tests
                 {
                     EditorSceneManager.CloseScene(scene, true);
                 }
+            }
+        }
+
+        [Test]
+        public void GameplayScene_WinCrowdChantUsesQuietSfxSource()
+        {
+            const string scenePath = "Assets/Game/Scenes/GameplayPrototype.unity";
+            var scene = SceneManager.GetSceneByPath(scenePath);
+            var openedForTest = !scene.IsValid() || !scene.isLoaded;
+            if (openedForTest)
+                scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+
+            try
+            {
+                WinCrowdChant chant = null;
+                foreach (var root in scene.GetRootGameObjects())
+                    chant ??= root.GetComponentInChildren<WinCrowdChant>(true);
+
+                Assert.That(chant, Is.Not.Null);
+                var serialized = new SerializedObject(chant);
+                var source = serialized.FindProperty("chantSource").objectReferenceValue as AudioSource;
+                Assert.That(source, Is.Not.Null);
+                Assert.That(source.clip, Is.SameAs(AssetDatabase.LoadAssetAtPath<AudioClip>(
+                    "Assets/Game/Art/sfx/crowd_chant v3.wav")));
+                Assert.That(source.outputAudioMixerGroup?.name, Is.EqualTo("SFX"));
+                Assert.That(source.playOnAwake, Is.False);
+                Assert.That(source.loop, Is.True);
+                Assert.That(serialized.FindProperty("chantVolume").floatValue, Is.LessThanOrEqualTo(.2f));
+            }
+            finally
+            {
+                if (openedForTest)
+                    EditorSceneManager.CloseScene(scene, true);
             }
         }
 
