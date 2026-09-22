@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameJam.Gameplay
@@ -5,6 +6,10 @@ namespace GameJam.Gameplay
     [DisallowMultipleComponent]
     public class Raycast3DButtonDetector : MonoBehaviour
     {
+        [Header("Raycast Active Control")]
+        [Tooltip("Centang jika ingin raycast langsung aktif di awal. Jika tidak, panggil EnableRaycast() saat masuk menu pilih level.")]
+        [SerializeField] private bool isRaycastActive = false;
+
         [Header("Camera & Raycast Settings")]
         [Tooltip("Camera acuan (jika kosong akan otomatis mengambil Camera di GameObject ini)")]
         [SerializeField] private Camera targetCamera;
@@ -15,6 +20,13 @@ namespace GameJam.Gameplay
         [Tooltip("Jarak maksimum raycast dapat mendeteksi tombol 3D")]
         [SerializeField] private float maxDistance = 15f;
 
+        [Tooltip("Jeda waktu (detik) toleransi saat raycast miss akibat rotasi kamera (mencegah flicker/ngadat saat pertama kali hover)")]
+        [SerializeField] private float unhoverDelay = 0.15f;
+
+        [Header("Focus Target List")]
+        [Tooltip("List GameObject acuan posisi Kamera & Spotlight saat tombol di-hover (urutan sesuai index level)")]
+        [SerializeField] private List<GameObject> focusTargets = new List<GameObject>();
+
         [Header("Camera Hover Motion Settings")]
         [Tooltip("FOV awal kamera saat tidak ada tombol yang di-hover")]
         [SerializeField] private float defaultFov = 48f;
@@ -23,10 +35,10 @@ namespace GameJam.Gameplay
         [SerializeField] private float hoverFov = 25f;
 
         [Tooltip("Kecepatan rotasi kamera menghadap ke tombol atau kembali ke asal")]
-        [SerializeField] private float rotationSpeed = 5f;
+        [SerializeField] private float rotationSpeed = 8f;
 
         [Tooltip("Kecepatan transisi perubahan FOV kamera")]
-        [SerializeField] private float fovSpeed = 5f;
+        [SerializeField] private float fovSpeed = 8f;
 
         [Header("Spotlight Reference")]
         [Tooltip("Drag GameObject Spot Light ke sini (bisa berupa GameObject atau komponen LevelMenuSpotlight)")]
@@ -41,15 +53,18 @@ namespace GameJam.Gameplay
         private LevelMenuSpotlight menuSpotlight;
         private LevelButton currentHoveredButton;
 
-        // Data rotasi & FOV
+        // Data rotasi, FOV, & Timer
         private Quaternion defaultRotation;
         private Quaternion targetRotation;
         private float targetFov;
+        private float unhoverTimer;
 
         // Data lokal untuk menggambar Preview Gizmos di Scene View
         private Ray lastRay;
         private Vector3 lastHitPoint;
         private bool isHittingButton;
+
+        public bool IsRaycastActive => isRaycastActive;
 
         private void Awake()
         {
@@ -85,7 +100,13 @@ namespace GameJam.Gameplay
 
         private void Update()
         {
-            if (targetCamera == null) return;
+            // Jika raycast sedang dimatikan atau kamera null, batalkan proses raycast
+            if (!isRaycastActive || targetCamera == null)
+            {
+                // Tetap lakukan motion kamera agar jika baru diset mati, kamera kembali ke posisi default secara halus
+                UpdateCameraMotion();
+                return;
+            }
 
             // 1. Dapatkan Ray dari posisi mouse
             lastRay = targetCamera.ScreenPointToRay(Input.mousePosition);
@@ -98,27 +119,33 @@ namespace GameJam.Gameplay
                 if (hit.transform.TryGetComponent<LevelButton>(out var button))
                 {
                     isHittingButton = true;
+                    unhoverTimer = 0f; // Reset timer toleransi unhover
+
+                    // Dapatkan Transform target dari list berdasarkan LevelIndex
+                    Transform focusTarget = GetFocusTarget(button);
 
                     // A. Hover Enter / Stay
                     if (currentHoveredButton != button)
                     {
-                        ClearCurrentHover();
+                        ClearCurrentHover(force: true);
                         currentHoveredButton = button;
                         currentHoveredButton.SetHovered(true);
 
-                        // Fokuskan Spotlight ke tombol 3D yang sedang di-hover
+                        // Fokuskan Spotlight ke target GameObject yang sesuai
                         if (menuSpotlight != null)
                         {
                             bool isUnlocked = LevelUnlockProgress.IsUnlocked(button.LevelIndex);
-                            menuSpotlight.FocusOnTarget(button.transform, isUnlocked);
+                            menuSpotlight.FocusOnTarget(focusTarget, isUnlocked);
                         }
                     }
 
-                    // B. Atur Target Rotasi Menghadap Tombol & Set Target FOV
-                    Vector3 directionToButton = button.transform.position - targetCamera.transform.position;
-                    if (directionToButton != Vector3.zero)
+                    // B. Atur Target Rotasi Menghadap ke Center Point Focus Target & Set Target FOV
+                    Vector3 targetCenterPoint = GetTargetCenterPoint(focusTarget);
+                    Vector3 directionToTarget = targetCenterPoint - targetCamera.transform.position;
+
+                    if (directionToTarget != Vector3.zero)
                     {
-                        targetRotation = Quaternion.LookRotation(directionToButton);
+                        targetRotation = Quaternion.LookRotation(directionToTarget);
                     }
                     targetFov = hoverFov;
 
@@ -129,24 +156,108 @@ namespace GameJam.Gameplay
                     }
 
                     UpdateCameraMotion();
-                    return; // Keluar agar tidak memanggil ClearCurrentHover
+                    return; // Keluar agar tidak mengeksekusi logika miss di bawah
                 }
             }
 
-            // D. Jika raycast tidak mengenai tombol 3D
+            // D. Jika raycast tidak mengenai tombol 3D (Miss)
             isHittingButton = false;
+
+            // Jika sedang meng-hover tombol, berikan toleransi waktu singkat sebelum melepaskannya
+            if (currentHoveredButton != null)
+            {
+                unhoverTimer += Time.deltaTime;
+                if (unhoverTimer < unhoverDelay)
+                {
+                    // Tetap lanjutkan pergerakan rotasi kamera menuju target selama jeda toleransi
+                    UpdateCameraMotion();
+                    return;
+                }
+            }
+
+            // Lepas hover jika sudah melewati jeda toleransi
             ClearCurrentHover();
 
-            // Lakukan pergerakan rotasi & FOV kembali ke default
+            // Pergerakan rotasi & FOV kembali ke default
             UpdateCameraMotion();
         }
 
-        private void ClearCurrentHover()
+        #region Public Raycast Controls
+
+        /// <summary>
+        /// Mengaktifkan pendeteksian raycast (panggil saat masuk menu Pilih Level).
+        /// </summary>
+        public void EnableRaycast()
         {
-            if (currentHoveredButton != null)
+            isRaycastActive = true;
+        }
+
+        /// <summary>
+        /// Mematikan pendeteksian raycast dan mereset status hover (panggil saat kembali ke Main Menu).
+        /// </summary>
+        public void DisableRaycast()
+        {
+            isRaycastActive = false;
+            isHittingButton = false;
+            ClearCurrentHover(force: true);
+        }
+
+        /// <summary>
+        /// Mengatur aktif/tidaknya raycast secara dinamis.
+        /// </summary>
+        public void SetRaycastActive(bool active)
+        {
+            if (active) EnableRaycast();
+            else DisableRaycast();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Mengambil target GameObject dari focusTargets berdasarkan level index.
+        /// Menggunakan transform tombol sebagai fallback jika index tidak valid / list kosong.
+        /// </summary>
+        private Transform GetFocusTarget(LevelButton button)
+        {
+            int index = button.LevelIndex;
+
+            if (focusTargets != null && index >= 0 && index < focusTargets.Count)
             {
-                currentHoveredButton.SetHovered(false);
-                currentHoveredButton = null;
+                if (focusTargets[index] != null)
+                {
+                    return focusTargets[index].transform;
+                }
+            }
+
+            // Fallback: Gunakan Transform tombol itu sendiri jika list kosong / index tidak tersedia
+            return button.transform;
+        }
+
+        /// <summary>
+        /// Mengambil titik tengah (center bounds) dari mesh visual target agar kamera/spotlight tidak menembak ke titik pivot bawah/lantai.
+        /// </summary>
+        private Vector3 GetTargetCenterPoint(Transform target)
+        {
+            if (target == null) return transform.position;
+
+            Renderer renderer = target.GetComponentInChildren<Renderer>();
+            if (renderer != null)
+            {
+                return renderer.bounds.center;
+            }
+
+            return target.position;
+        }
+
+        private void ClearCurrentHover(bool force = false)
+        {
+            if (currentHoveredButton != null || force)
+            {
+                if (currentHoveredButton != null)
+                {
+                    currentHoveredButton.SetHovered(false);
+                    currentHoveredButton = null;
+                }
 
                 // Reset Spotlight kembali ke posisi/warna default
                 if (menuSpotlight != null)
@@ -158,6 +269,7 @@ namespace GameJam.Gameplay
             // Kembalikan target rotasi & FOV ke kondisi default
             targetRotation = defaultRotation;
             targetFov = defaultFov;
+            unhoverTimer = 0f;
         }
 
         private void UpdateCameraMotion()
@@ -192,6 +304,8 @@ namespace GameJam.Gameplay
 
             if (Application.isPlaying)
             {
+                if (!isRaycastActive) return; // Jangan gambar gizmos saat raycast sedang mati
+
                 if (isHittingButton)
                 {
                     // Preview SAAT KENA TOMBOL (Warna Hijau + Bola pada titik sentuh)
@@ -213,7 +327,6 @@ namespace GameJam.Gameplay
                 Gizmos.DrawRay(cam.transform.position, cam.transform.forward * maxDistance);
             }
         }
-
 
         public void SetDefaultRotation(Quaternion newDefaultRotation)
         {
