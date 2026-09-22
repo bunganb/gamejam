@@ -28,18 +28,24 @@ namespace GameJam.Gameplay
         [Tooltip("Index target awal jika Move On Start diaktifkan")]
         [SerializeField] private int startTargetIndex = 0;
 
-        [Header("Director Reference (Optional)")]
+        [Header("Director & Detector Reference (Optional)")]
         [Tooltip("Script PrototypeCameraDirector yang mengontrol goyangan/effects kamera (jika ada)")]
         [SerializeField] private PrototypeCameraDirector cameraDirector;
+
+        [Tooltip("Script Raycast3DButtonDetector yang mengontrol hover kamera (jika ada)")]
+        [SerializeField] private Raycast3DButtonDetector buttonDetector;
 
         private Transform currentTarget;
         private int currentIndex = -1;
         private int previousIndex = -1;
         private bool isMoving = false;
 
+        // Variabel penampung posisi & rotasi murni (mencegah feedback loop dengan Director & Detector)
+        private Vector3 currentBasePosition;
+        private Quaternion currentBaseRotation;
+
         private void Awake()
         {
-            // Jika cameraTransform belum di-assign, cari Main Camera
             if (cameraTransform == null)
             {
                 if (Camera.main != null)
@@ -52,15 +58,25 @@ namespace GameJam.Gameplay
                 }
             }
 
-            // Cari komponen PrototypeCameraDirector jika belum di-assign
             if (cameraDirector == null && cameraTransform != null)
             {
                 cameraDirector = cameraTransform.GetComponent<PrototypeCameraDirector>();
+            }
+
+            if (buttonDetector == null && cameraTransform != null)
+            {
+                buttonDetector = cameraTransform.GetComponent<Raycast3DButtonDetector>();
             }
         }
 
         private void Start()
         {
+            if (cameraTransform != null)
+            {
+                currentBasePosition = cameraTransform.position;
+                currentBaseRotation = cameraTransform.rotation;
+            }
+
             if (moveOnStart && targetPoints.Count > 0)
             {
                 MoveToTargetIndex(startTargetIndex);
@@ -71,38 +87,50 @@ namespace GameJam.Gameplay
         {
             if (!isMoving || currentTarget == null || cameraTransform == null) return;
 
-            // 1. Gerakkan posisi dan rotasi kamera ke currentTarget
-            Vector3 newPosition = Vector3.Lerp(cameraTransform.position, currentTarget.position, Time.deltaTime * moveSpeed);
-            Quaternion newRotation = Quaternion.Lerp(cameraTransform.rotation, currentTarget.rotation, Time.deltaTime * rotateSpeed);
+            // 1. Lerp posisi dan rotasi MURNI (tanpa mengambil nilai dari cameraTransform yang sudah terkontaminasi sway/hover)
+            currentBasePosition = Vector3.Lerp(currentBasePosition, currentTarget.position, Time.deltaTime * moveSpeed);
+            currentBaseRotation = Quaternion.Lerp(currentBaseRotation, currentTarget.rotation, Time.deltaTime * rotateSpeed);
 
-            cameraTransform.position = newPosition;
-            cameraTransform.rotation = newRotation;
+            // 2. Terapkan nilai murni ke cameraTransform
+            cameraTransform.position = currentBasePosition;
+            cameraTransform.rotation = currentBaseRotation;
 
-            // 2. Sync ke PrototypeCameraDirector agar efek goyang/groove tetap presisi
+            // 3. Sync ke PrototypeCameraDirector
             if (cameraDirector != null)
             {
                 cameraDirector.SetBaseline(cameraTransform.localPosition, cameraTransform.localRotation);
             }
 
-            // 3. Hentikan gerakan jika sudah sampai di target
-            if (Vector3.Distance(cameraTransform.position, currentTarget.position) < 0.005f &&
-                Quaternion.Angle(cameraTransform.rotation, currentTarget.rotation) < 0.05f)
+            // 4. Sync rotasi acuan ke Raycast3DButtonDetector agar tidak memutar balik kamera
+            if (buttonDetector != null)
             {
-                cameraTransform.position = currentTarget.position;
-                cameraTransform.rotation = currentTarget.rotation;
+                buttonDetector.SetDefaultRotation(currentBaseRotation);
+            }
+
+            // 5. Hentikan gerakan jika sudah sampai di target
+            if (Vector3.Distance(currentBasePosition, currentTarget.position) < 0.005f &&
+                Quaternion.Angle(currentBaseRotation, currentTarget.rotation) < 0.05f)
+            {
+                currentBasePosition = currentTarget.position;
+                currentBaseRotation = currentTarget.rotation;
+
+                cameraTransform.position = currentBasePosition;
+                cameraTransform.rotation = currentBaseRotation;
 
                 if (cameraDirector != null)
                 {
                     cameraDirector.SetBaseline(cameraTransform.localPosition, cameraTransform.localRotation);
                 }
 
+                if (buttonDetector != null)
+                {
+                    buttonDetector.SetDefaultRotation(currentBaseRotation);
+                }
+
                 isMoving = false;
             }
         }
 
-        /// <summary>
-        /// Panggil fungsi ini dari Event OnClick Button dengan memasukkan nomor index (0, 1, 2, dst)
-        /// </summary>
         public void MoveToTargetIndex(int index)
         {
             if (targetPoints == null || index < 0 || index >= targetPoints.Count)
@@ -117,10 +145,16 @@ namespace GameJam.Gameplay
                 return;
             }
 
-            // Simpan index sebelumnya untuk fungsi Kembali
             if (currentIndex != index)
             {
                 previousIndex = currentIndex;
+            }
+
+            // Inisialisasi posisi & rotasi acuan awal saat gerakan dimulai
+            if (cameraTransform != null)
+            {
+                currentBasePosition = cameraTransform.position;
+                currentBaseRotation = cameraTransform.rotation;
             }
 
             currentIndex = index;
@@ -128,12 +162,16 @@ namespace GameJam.Gameplay
             isMoving = true;
         }
 
-        /// <summary>
-        /// Panggil fungsi ini pada Tombol 'Back' / 'Kembali' untuk mereturn kamera ke lokasi target sebelumnya
-        /// </summary>
         public void MoveToPreviousTarget()
         {
-            MoveToTargetIndex(0);
+            if (previousIndex >= 0 && previousIndex < targetPoints.Count)
+            {
+                MoveToTargetIndex(previousIndex);
+            }
+            else
+            {
+                MoveToTargetIndex(0);
+            }
         }
     }
 }

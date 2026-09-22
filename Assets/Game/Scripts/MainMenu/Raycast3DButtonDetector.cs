@@ -15,6 +15,19 @@ namespace GameJam.Gameplay
         [Tooltip("Jarak maksimum raycast dapat mendeteksi tombol 3D")]
         [SerializeField] private float maxDistance = 15f;
 
+        [Header("Camera Hover Motion Settings")]
+        [Tooltip("FOV awal kamera saat tidak ada tombol yang di-hover")]
+        [SerializeField] private float defaultFov = 48f;
+
+        [Tooltip("FOV kamera saat tombol 3D sedang di-hover")]
+        [SerializeField] private float hoverFov = 25f;
+
+        [Tooltip("Kecepatan rotasi kamera menghadap ke tombol atau kembali ke asal")]
+        [SerializeField] private float rotationSpeed = 5f;
+
+        [Tooltip("Kecepatan transisi perubahan FOV kamera")]
+        [SerializeField] private float fovSpeed = 5f;
+
         [Header("Spotlight Reference")]
         [Tooltip("Drag GameObject Spot Light ke sini (bisa berupa GameObject atau komponen LevelMenuSpotlight)")]
         [SerializeField] private GameObject menuSpotlightObject;
@@ -27,6 +40,11 @@ namespace GameJam.Gameplay
 
         private LevelMenuSpotlight menuSpotlight;
         private LevelButton currentHoveredButton;
+
+        // Data rotasi & FOV
+        private Quaternion defaultRotation;
+        private Quaternion targetRotation;
+        private float targetFov;
 
         // Data lokal untuk menggambar Preview Gizmos di Scene View
         private Ray lastRay;
@@ -43,6 +61,15 @@ namespace GameJam.Gameplay
                 {
                     targetCamera = Camera.main;
                 }
+            }
+
+            if (targetCamera != null)
+            {
+                // Simpan rotasi awal kamera & tetapkan FOV awal
+                defaultRotation = targetCamera.transform.rotation;
+                targetRotation = defaultRotation;
+                targetFov = defaultFov;
+                targetCamera.fieldOfView = defaultFov;
             }
 
             // Auto fetch komponen LevelMenuSpotlight dari GameObject yang di-assign
@@ -87,19 +114,31 @@ namespace GameJam.Gameplay
                         }
                     }
 
-                    // B. Input Klik Kiri Mouse
+                    // B. Atur Target Rotasi Menghadap Tombol & Set Target FOV
+                    Vector3 directionToButton = button.transform.position - targetCamera.transform.position;
+                    if (directionToButton != Vector3.zero)
+                    {
+                        targetRotation = Quaternion.LookRotation(directionToButton);
+                    }
+                    targetFov = hoverFov;
+
+                    // C. Input Klik Kiri Mouse
                     if (Input.GetMouseButtonDown(0))
                     {
                         currentHoveredButton.OnButtonClicked();
                     }
 
+                    UpdateCameraMotion();
                     return; // Keluar agar tidak memanggil ClearCurrentHover
                 }
             }
 
-            // C. Jika raycast tidak mengenai tombol 3D
+            // D. Jika raycast tidak mengenai tombol 3D
             isHittingButton = false;
             ClearCurrentHover();
+
+            // Lakukan pergerakan rotasi & FOV kembali ke default
+            UpdateCameraMotion();
         }
 
         private void ClearCurrentHover()
@@ -115,6 +154,29 @@ namespace GameJam.Gameplay
                     menuSpotlight.ResetFocus();
                 }
             }
+
+            // Kembalikan target rotasi & FOV ke kondisi default
+            targetRotation = defaultRotation;
+            targetFov = defaultFov;
+        }
+
+        private void UpdateCameraMotion()
+        {
+            if (targetCamera == null) return;
+
+            // Interpolasi rotasi kamera secara halus (Slerp)
+            targetCamera.transform.rotation = Quaternion.Slerp(
+                targetCamera.transform.rotation,
+                targetRotation,
+                Time.deltaTime * rotationSpeed
+            );
+
+            // Interpolasi FOV kamera secara halus (Lerp)
+            targetCamera.fieldOfView = Mathf.Lerp(
+                targetCamera.fieldOfView,
+                targetFov,
+                Time.deltaTime * fovSpeed
+            );
         }
 
         // =========================================================
@@ -149,6 +211,16 @@ namespace GameJam.Gameplay
                 // Preview DI LUAR PLAY MODE (Warna Cyan lurus dari arah kamera)
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawRay(cam.transform.position, cam.transform.forward * maxDistance);
+            }
+        }
+
+
+        public void SetDefaultRotation(Quaternion newDefaultRotation)
+        {
+            defaultRotation = newDefaultRotation;
+            if (currentHoveredButton == null)
+            {
+                targetRotation = defaultRotation;
             }
         }
     }
