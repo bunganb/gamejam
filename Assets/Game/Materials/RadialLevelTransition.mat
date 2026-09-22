@@ -29,10 +29,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Radius: 0
+    - _Radius: 1.5345882
     - _Softness: 0.08
     m_Colors:
-    - _Center: {r: 0.51317, g: 0.5569965, b: 0, a: 0}
+    - _Center: {r: 0.4582282, g: 0.5462419, b: 0, a: 0}
     - _Color: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

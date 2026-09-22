@@ -19,11 +19,11 @@ MonoBehaviour:
   baseHarmony: {fileID: 8300000, guid: b601aba1c9395fc44ada23bdd89a3fa2, type: 3}
   secondaryLayer: {fileID: 0}
   secondaryLayerThreshold: 1
-  buildLayer: {fileID: 8300000, guid: b9b28c664cce72e428b260a4fd94940c, type: 3}
+  buildLayer: {fileID: 0}
   buildLayerRemainingNotes: 1
   topLoopLayer: {fileID: 0}
   topLoopUnlockRow: -1
-  fullSong: {fileID: 8300000, guid: bf116d7650df9cb469256e9fb384326e, type: 3}
+  fullSong: {fileID: 8300000, guid: d253a684cd79f3e4888023779dc65c86, type: 3}
   noteSamples:
   - {fileID: 8300000, guid: 4db1e8fc761f0554d82c8da9a6822d42, type: 3}
   - {fileID: 8300000, guid: 4db1e8fc761f0554d82c8da9a6822d42, type: 3}
