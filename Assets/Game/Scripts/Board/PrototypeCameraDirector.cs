@@ -534,5 +534,13 @@ namespace GameJam.Gameplay
         {
             return Mathf.PerlinNoise(time, seed) * 2f - 1f;
         }
+
+        public void SetBaseline(Vector3 localPosition, Quaternion localRotation)
+        {
+            baseLocalPosition = localPosition;
+            baseLocalRotation = localRotation;
+            baselineCaptured = true;
+        }
     }
+    
 }

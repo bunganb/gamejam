@@ -2,12 +2,24 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using GameJam.Gameplay;
 
+[RequireComponent(typeof(Collider))]
 public class LevelButton : MonoBehaviour
 {
+    [Header("Level Data & Settings")]
     [SerializeField] private GameLevelDefinition myLevelData;
     [SerializeField, Min(0)] private int levelIndex;
     [SerializeField] private string gameplaySceneName = "GameplayPrototype";
     [SerializeField] private string loadingSceneName = "Loading";
+
+    [Header("3D Visual Feedback")]
+    [SerializeField] private Renderer objectRenderer;
+    [SerializeField] private Color lockedColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+
+    public int LevelIndex => levelIndex;
+    
+    private Color originalColor;
+    private bool isUnlocked;
+    private bool isHovered;
 
     public GameLevelDefinition Level => myLevelData;
 
@@ -21,10 +33,22 @@ public class LevelButton : MonoBehaviour
         levelIndex = index;
         gameplaySceneName = sceneName;
         loadingSceneName = loadingScene;
+
+        RefreshLockState();
     }
 
     private void Awake()
     {
+        if (objectRenderer == null)
+        {
+            objectRenderer = GetComponent<Renderer>();
+        }
+
+        if (objectRenderer != null)
+        {
+            originalColor = objectRenderer.material.color;
+        }
+
         RefreshLockState();
     }
 
@@ -33,20 +57,54 @@ public class LevelButton : MonoBehaviour
         RefreshLockState();
     }
 
-    private void RefreshLockState()
+    public void RefreshLockState()
     {
-        var button = GetComponent<UnityEngine.UI.Button>();
-        if (button != null)
+        isUnlocked = LevelUnlockProgress.IsUnlocked(levelIndex);
+
+        if (objectRenderer != null)
         {
-            button.interactable = GameJam.Gameplay.LevelUnlockProgress.IsUnlocked(levelIndex);
+            if (!isUnlocked)
+            {
+                objectRenderer.material.color = lockedColor;
+            }
+            else
+            {
+                objectRenderer.material.color = originalColor;
+            }
+        }
+
+        var uiButton = GetComponent<UnityEngine.UI.Button>();
+        if (uiButton != null)
+        {
+            uiButton.interactable = isUnlocked;
+        }
+    }
+
+    /// <summary>
+    /// Dipanggil oleh Raycast3DButtonDetector untuk mencatat status hover (tanpa merubah visual/animasi tombol)
+    /// </summary>
+    public void SetHovered(bool state)
+    {
+        if (!isUnlocked) return;
+        isHovered = state;
+    }
+
+    /// <summary>
+    /// Dipanggil saat diklik oleh raycast
+    /// </summary>
+    public void OnButtonClicked()
+    {
+        if (isHovered)
+        {
+            LoadThisLevel();
         }
     }
 
     public void LoadThisLevel()
     {
-        if (!GameJam.Gameplay.LevelUnlockProgress.IsUnlocked(levelIndex))
+        if (!LevelUnlockProgress.IsUnlocked(levelIndex))
         {
-            Debug.Log("Level ini belum terbuka.", this);
+            Debug.Log($"Level {levelIndex} ini belum terbuka.", this);
             return;
         }
 
