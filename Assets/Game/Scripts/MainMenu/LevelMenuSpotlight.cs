@@ -59,8 +59,10 @@ namespace GameJam.Gameplay
 
             if (isHovering && currentTarget != null)
             {
-                // A. Kondisi Hover: Mengarah ke Tombol
-                Vector3 direction = currentTarget.position - transform.position;
+                // A. Kondisi Hover: Mengarah ke Titik Tengah Visual Mesh 3D Tombol
+                Vector3 targetCenterPoint = GetTargetCenterPoint(currentTarget);
+                Vector3 direction = targetCenterPoint - transform.position;
+
                 if (direction.sqrMagnitude > 0.001f)
                 {
                     targetRotation = Quaternion.LookRotation(direction);
@@ -83,12 +85,34 @@ namespace GameJam.Gameplay
                 targetIntensity = defaultIntensity;
             }
 
-            // Transisi Halus (Lerp)
+            // Transisi Halus (Lerp / Slerp)
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * transitionSpeed);
             spotLight.spotAngle = Mathf.Lerp(spotLight.spotAngle, targetAngle, Time.deltaTime * transitionSpeed);
             spotLight.color = Color.Lerp(spotLight.color, targetColor, Time.deltaTime * transitionSpeed);
             spotLight.intensity = Mathf.Lerp(spotLight.intensity, targetIntensity, Time.deltaTime * transitionSpeed);
         }
+
+        #region Helper Functions
+
+        /// <summary>
+        /// Mengambil titik tengah fisik/visual dari Mesh 3D agar Spotlight tidak menembak ke titik dasar/pivot lantai
+        /// </summary>
+        private Vector3 GetTargetCenterPoint(Transform target)
+        {
+            if (target == null) return transform.position;
+
+            // Cari Renderer pada target atau anak-anaknya (child)
+            Renderer renderer = target.GetComponentInChildren<Renderer>();
+            if (renderer != null)
+            {
+                return renderer.bounds.center;
+            }
+
+            // Fallback jika tidak ditemukan Mesh Renderer
+            return target.position;
+        }
+
+        #endregion
 
         #region Public Control Functions
 
