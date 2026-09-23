@@ -288,6 +288,22 @@ namespace GameJam.Gameplay.Tests
                     buildScene => buildScene.path == gameplayPath);
                 Assert.That(gameplayBuildScene, Is.Not.Null);
                 Assert.That(gameplayBuildScene.enabled, Is.True);
+
+                var backButton = System.Array.Find(
+                    Object.FindObjectsByType<UnityEngine.UI.Button>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None),
+                    button => button.gameObject.scene == scene && button.name == "Back (1)");
+                Assert.That(backButton, Is.Not.Null, "Missing level-select back button.");
+                var hasDisableRaycast = false;
+                for (var callIndex = 0; callIndex < backButton.onClick.GetPersistentEventCount(); callIndex++)
+                {
+                    if (backButton.onClick.GetPersistentMethodName(callIndex) == "DisableRaycast")
+                        hasDisableRaycast = true;
+                }
+
+                Assert.That(hasDisableRaycast, Is.True,
+                    "Level-select back button must disable hover raycasts before returning to the menu.");
             }
             finally
             {
@@ -296,6 +312,24 @@ namespace GameJam.Gameplay.Tests
                     EditorSceneManager.CloseScene(scene, true);
                 }
             }
+        }
+
+        [Test]
+        public void LevelSelectHover_CameraTransitionHasExclusiveOwnership()
+        {
+            var cameraObject = new GameObject("Level Select Camera", typeof(Camera));
+            disposables.Add(cameraObject);
+            var detector = cameraObject.AddComponent<Raycast3DButtonDetector>();
+
+            detector.BeginCameraTransition();
+
+            Assert.That(detector.IsCameraTransitionActive, Is.True);
+            Assert.That(detector.IsRaycastActive, Is.False);
+
+            var finalRotation = Quaternion.Euler(20f, 35f, 0f);
+            detector.CompleteCameraTransition(finalRotation);
+
+            Assert.That(detector.IsCameraTransitionActive, Is.False);
         }
 
         [Test]

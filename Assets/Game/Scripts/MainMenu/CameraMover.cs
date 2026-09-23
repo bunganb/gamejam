@@ -17,8 +17,14 @@ namespace GameJam.Gameplay
         [Tooltip("Waktu yang dibutuhkan untuk mencapai target (makin kecil makin cepat)")]
         [SerializeField] private float smoothTime = 0.3f;
 
-        [Tooltip("Kecepatan rotasi kamera")]
-        [SerializeField] private float rotateSpeed = 5f;
+        [Tooltip("Kecepatan gerakan rotasi kamera")]
+        [SerializeField] private float rotateSpeed = 3f;
+
+        [Tooltip("Jarak yang dianggap sudah sampai agar ekor Lerp tidak menahan hover terlalu lama")]
+        [SerializeField, Min(0.001f)] private float arrivalDistance = 0.05f;
+
+        [Tooltip("Selisih rotasi yang dianggap sudah sampai dalam derajat")]
+        [SerializeField, Min(0.01f)] private float arrivalAngle = 0.5f;
 
         [Tooltip("Apakah kamera langsung bergerak ke target awal saat Start?")]
         [SerializeField] private bool moveOnStart = false;
@@ -36,8 +42,7 @@ namespace GameJam.Gameplay
         private Vector3 currentBasePosition;
         private Quaternion currentBaseRotation;
 
-        // Velocity penampung untuk SmoothDamp
-        private Vector3 moveVelocity = Vector3.zero;
+        public bool IsMoving => isMoving;
 
         private void Awake()
         {
@@ -92,15 +97,24 @@ namespace GameJam.Gameplay
                 cameraTransform.position = currentBasePosition;
                 cameraTransform.rotation = currentBaseRotation;
 
-                // 4. Cek apakah sudah sangat dekat dengan target
-                float distance = Vector3.Distance(currentBasePosition, currentTarget.position);
-                float angle = Quaternion.Angle(currentBaseRotation, currentTarget.rotation);
+            // 3. Sync ke PrototypeCameraDirector
+            if (cameraDirector != null)
+            {
+                cameraDirector.SetBaseline(cameraTransform.localPosition, cameraTransform.localRotation);
+            }
 
-                // Menggunakan threshold yang jauh lebih halus & menolkan velocity
-                if (distance < 0.001f && angle < 0.01f)
-                {
-                    currentBasePosition = currentTarget.position;
-                    currentBaseRotation = currentTarget.rotation;
+            // 4. Sync rotasi acuan ke Raycast3DButtonDetector agar tidak memutar balik kamera
+            if (buttonDetector != null)
+            {
+                buttonDetector.SetDefaultRotation(currentBaseRotation);
+            }
+
+            // 5. Hentikan gerakan jika sudah sampai di target
+            if (Vector3.Distance(currentBasePosition, currentTarget.position) < arrivalDistance &&
+                Quaternion.Angle(currentBaseRotation, currentTarget.rotation) < arrivalAngle)
+            {
+                currentBasePosition = currentTarget.position;
+                currentBaseRotation = currentTarget.rotation;
 
                     cameraTransform.position = currentBasePosition;
                     cameraTransform.rotation = currentBaseRotation;
@@ -121,9 +135,12 @@ namespace GameJam.Gameplay
                 cameraDirector.SetBaseline(cameraTransform.localPosition, cameraTransform.localRotation);
             }
 
-            if (buttonDetector != null)
-            {
-                buttonDetector.SetDefaultRotation(currentBaseRotation);
+                if (buttonDetector != null)
+                {
+                    buttonDetector.CompleteCameraTransition(currentBaseRotation);
+                }
+
+                isMoving = false;
             }
         }
 
@@ -150,6 +167,14 @@ namespace GameJam.Gameplay
             currentTarget = targetPoints[index];
             moveVelocity = Vector3.zero; // Reset kecepatan sebelum mulai gerak baru
             isMoving = true;
+
+            // CameraMover owns the camera for the duration of this transition.
+            // Hover focus must not write another rotation in LateUpdate until
+            // this movement has reached its final pose.
+            if (buttonDetector != null)
+            {
+                buttonDetector.BeginCameraTransition();
+            }
         }
 
         public void MoveToPreviousTarget()
