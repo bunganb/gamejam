@@ -19044,7 +19044,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10000
   m_TargetDisplay: 0
 --- !u!224 &1379203802
 RectTransform:
@@ -19058,10 +19058,10 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1849838350}
   - {fileID: 2138591953}
   - {fileID: 1062781955}
   - {fileID: 1291344531}
-  - {fileID: 1849838350}
   - {fileID: 443859318}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -23153,7 +23153,7 @@ MonoBehaviour:
       land, follow the Goal Chain, and make this graveyard PARTY!
     carlSprite: {fileID: 21300000, guid: c522bdfe23578454c8032b2236c0440a, type: 3}
     worldHighlightTarget: {fileID: 0}
-    uiHighlightTarget: {fileID: 1291344531}
+    uiHighlightTarget: {fileID: 1062781955}
   - id: Break
     message: Oops! One wrong color breaks the chain! Complete it! Good Luck!
     carlSprite: {fileID: 21300000, guid: e5d48c8c716217141ba21e1cfc7ca624, type: 3}
@@ -23164,10 +23164,12 @@ MonoBehaviour:
   ledGoalTarget: {fileID: 1711813855782408195}
   rulesTarget: {fileID: 1291344531}
   radialHighlightMaterial: {fileID: 2100000, guid: b38118cb73967e847920d2aa78f23aea, type: 2}
-  highlightColor: {r: 0, g: 0, b: 0, a: 0.62}
-  highlightRadius: 0.16
-  highlightSoftness: 0.08
+  highlightColor: {r: 0.05882353, g: 0.039215688, b: 0.13725491, a: 0.8235294}
+  highlightRadius: 0.2
+  highlightSoftness: 0.06
   highlightSortingOrder: 9000
+  initialHighlightDelay: 1.5
+  highlightTransitionDuration: 0.45
 --- !u!95 &1849838354
 Animator:
   serializedVersion: 7

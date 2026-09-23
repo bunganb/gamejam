@@ -32,7 +32,7 @@ Material:
     - _Radius: 2
     - _Softness: 0.08
     m_Colors:
-    - _Center: {r: 0.5142643, g: 0.55700517, b: 0, a: 0}
+    - _Center: {r: 0.51389974, g: 0.5558646, b: 0, a: 0}
     - _Color: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
