@@ -958,7 +958,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86fc005dfc7d3df4385a3c30ec5969ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelButton
-  myLevelData: {fileID: 11400000, guid: 3fb497082f0904c479c2503d3c119e23, type: 2}
+  myLevelData: {fileID: 11400000, guid: 82b00825f4c7dbd48aea80de4253b2c3, type: 2}
   levelIndex: 2
   gameplaySceneName: GameplayPrototype
   loadingSceneName: Loading
@@ -985,7 +985,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1.07, y: 1, z: 1}
-  m_Center: {x: -0.5, y: -0.36, z: 0}
+  m_Center: {x: -0.5, y: 0, z: 0}
 --- !u!23 &142018213
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4189,7 +4189,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 3.22, y: 1, z: 0.39}
-  m_Center: {x: 0.89, y: -0.19, z: 0}
+  m_Center: {x: 0.89, y: 0, z: 0}
 --- !u!23 &485750130
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6845,7 +6845,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86fc005dfc7d3df4385a3c30ec5969ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelButton
-  myLevelData: {fileID: 11400000, guid: 3fb497082f0904c479c2503d3c119e23, type: 2}
+  myLevelData: {fileID: 11400000, guid: 4accf36a84d412942a7d31719c39eecd, type: 2}
   levelIndex: 1
   gameplaySceneName: GameplayPrototype
   loadingSceneName: Loading
@@ -6871,8 +6871,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.54, y: 1, z: 0.39}
-  m_Center: {x: -0.39, y: -0.19, z: 0}
+  m_Size: {x: 2.9, y: 1, z: 0.39}
+  m_Center: {x: -0.39, y: 0, z: 0}
 --- !u!23 &927150302
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -11978,7 +11978,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86fc005dfc7d3df4385a3c30ec5969ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelButton
-  myLevelData: {fileID: 11400000, guid: 3fb497082f0904c479c2503d3c119e23, type: 2}
+  myLevelData: {fileID: 11400000, guid: a8afa18a70e38614982e511ea00f3950, type: 2}
   levelIndex: 4
   gameplaySceneName: GameplayPrototype
   loadingSceneName: Loading
@@ -12005,7 +12005,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 3, y: 1, z: 0.39}
-  m_Center: {x: -1.36, y: -0.19, z: 0}
+  m_Center: {x: -1.36, y: 0, z: 0}
 --- !u!23 &1073594357
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -14116,7 +14116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86fc005dfc7d3df4385a3c30ec5969ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelButton
-  myLevelData: {fileID: 11400000, guid: 3fb497082f0904c479c2503d3c119e23, type: 2}
+  myLevelData: {fileID: 11400000, guid: c945574b57adf24469f7c4761e6c4024, type: 2}
   levelIndex: 5
   gameplaySceneName: GameplayPrototype
   loadingSceneName: Loading
@@ -14143,7 +14143,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 2.5, y: 1, z: 0.39}
-  m_Center: {x: -1.42, y: -0.19, z: 0}
+  m_Center: {x: -1.42, y: 0, z: 0}
 --- !u!23 &1269618124
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -15329,7 +15329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86fc005dfc7d3df4385a3c30ec5969ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelButton
-  myLevelData: {fileID: 11400000, guid: 3fb497082f0904c479c2503d3c119e23, type: 2}
+  myLevelData: {fileID: 11400000, guid: c71faebb49109f344bd0e83a58cc13fb, type: 2}
   levelIndex: 3
   gameplaySceneName: GameplayPrototype
   loadingSceneName: Loading
@@ -15355,8 +15355,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.66, y: 1, z: 0.39}
-  m_Center: {x: -0.45, y: -0.19, z: 0}
+  m_Size: {x: 2.4, y: 1, z: 0.39}
+  m_Center: {x: -0.45, y: 0, z: 0}
 --- !u!23 &1324734098
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -15655,7 +15655,7 @@ MonoBehaviour:
   defaultIntensity: 300
   hoverSpotAngle: 25
   unlockedColor: {r: 0.976, g: 1, b: 0.322, a: 0.78431374}
-  lockedColor: {r: 0, g: 0, b: 0, a: 1}
+  lockedColor: {r: 0.9764706, g: 1, b: 0.32156864, a: 0.78431374}
   hoverIntensity: 450
   transitionSpeed: 8
 --- !u!1 &1359075684
@@ -17917,12 +17917,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameJam.Gameplay.Raycast3DButtonDetector
   isRaycastActive: 0
+  requireMouseMovementOnEnable: 1
+  mouseMovementThreshold: 3
+  enableDelay: 1
+  disableDelay: 0.2
   targetCamera: {fileID: 1726906839}
   buttonLayer:
     serializedVersion: 2
     m_Bits: 64
   maxDistance: 7.5
-  unhoverDelay: 0.15
   focusTargets:
   - {fileID: 999784660}
   - {fileID: 1677901769}
