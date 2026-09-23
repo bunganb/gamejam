@@ -22,6 +22,12 @@ namespace GameJam.Gameplay
         [Tooltip("Kecepatan gerakan rotasi kamera")]
         [SerializeField] private float rotateSpeed = 3f;
 
+        [Tooltip("Jarak yang dianggap sudah sampai agar ekor Lerp tidak menahan hover terlalu lama")]
+        [SerializeField, Min(0.001f)] private float arrivalDistance = 0.05f;
+
+        [Tooltip("Selisih rotasi yang dianggap sudah sampai dalam derajat")]
+        [SerializeField, Min(0.01f)] private float arrivalAngle = 0.5f;
+
         [Tooltip("Apakah kamera langsung bergerak ke target awal saat Start?")]
         [SerializeField] private bool moveOnStart = false;
 
@@ -43,6 +49,8 @@ namespace GameJam.Gameplay
         // Variabel penampung posisi & rotasi murni (mencegah feedback loop dengan Director & Detector)
         private Vector3 currentBasePosition;
         private Quaternion currentBaseRotation;
+
+        public bool IsMoving => isMoving;
 
         private void Awake()
         {
@@ -108,8 +116,8 @@ namespace GameJam.Gameplay
             }
 
             // 5. Hentikan gerakan jika sudah sampai di target
-            if (Vector3.Distance(currentBasePosition, currentTarget.position) < 0.005f &&
-                Quaternion.Angle(currentBaseRotation, currentTarget.rotation) < 0.05f)
+            if (Vector3.Distance(currentBasePosition, currentTarget.position) < arrivalDistance &&
+                Quaternion.Angle(currentBaseRotation, currentTarget.rotation) < arrivalAngle)
             {
                 currentBasePosition = currentTarget.position;
                 currentBaseRotation = currentTarget.rotation;
@@ -124,7 +132,7 @@ namespace GameJam.Gameplay
 
                 if (buttonDetector != null)
                 {
-                    buttonDetector.SetDefaultRotation(currentBaseRotation);
+                    buttonDetector.CompleteCameraTransition(currentBaseRotation);
                 }
 
                 isMoving = false;
@@ -160,6 +168,14 @@ namespace GameJam.Gameplay
             currentIndex = index;
             currentTarget = targetPoints[index];
             isMoving = true;
+
+            // CameraMover owns the camera for the duration of this transition.
+            // Hover focus must not write another rotation in LateUpdate until
+            // this movement has reached its final pose.
+            if (buttonDetector != null)
+            {
+                buttonDetector.BeginCameraTransition();
+            }
         }
 
         public void MoveToPreviousTarget()

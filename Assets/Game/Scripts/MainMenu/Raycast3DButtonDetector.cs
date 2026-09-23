@@ -50,6 +50,10 @@ namespace GameJam.Gameplay
         [Tooltip("Kecepatan transisi perubahan FOV kamera")]
         [SerializeField] private float fovSpeed = 8f;
 
+        [Header("Hover Stability")]
+        [Tooltip("Jarak gerak mouse sebelum hover dilepas setelah raycast kehilangan collider karena kamera ikut bergerak")]
+        [SerializeField, Min(1f)] private float hoverReleaseMouseDistance = 18f;
+
         [Header("Spotlight Reference")]
         [Tooltip("Drag GameObject Spot Light ke sini (bisa berupa GameObject atau komponen LevelMenuSpotlight)")]
         [SerializeField] private GameObject menuSpotlightObject;
@@ -77,6 +81,8 @@ namespace GameJam.Gameplay
         private Coroutine stateChangeCoroutine;
         private bool isWaitingForMouseMovement = false;
         private Vector3 mousePosOnEnable;
+        private bool isCameraTransitionActive;
+        private Vector3 lastValidHoverMousePosition;
 
         // Batas atas untuk deltaTime yang dipakai UpdateCameraMotion, supaya
         // spike deltaTime di frame pertama (sisa loading/scene transition)
@@ -84,6 +90,7 @@ namespace GameJam.Gameplay
         private const float MaxMotionDeltaTime = 0.05f;
 
         public bool IsRaycastActive => isRaycastActive;
+        public bool IsCameraTransitionActive => isCameraTransitionActive;
 
         private void Awake()
         {
@@ -189,6 +196,11 @@ namespace GameJam.Gameplay
                         }
                     }
 
+                    // Keep an anchor from the latest valid hit. When camera
+                    // focus moves the object away from the cursor by itself,
+                    // a temporary ray miss must not cancel the hover.
+                    lastValidHoverMousePosition = Input.mousePosition;
+
                     // B. Atur Target Rotasi & FOV Kamera
                     Vector3 targetCenterPoint = GetTargetCenterPoint(focusTarget);
                     Vector3 directionToTarget = targetCenterPoint - targetCamera.transform.position;
@@ -211,11 +223,27 @@ namespace GameJam.Gameplay
 
             // 3. Jika Raycast Miss (Tidak Kena Tombol)
             isHittingButton = false;
+
+            // Camera rotation/FOV changes screen-space projection. Without
+            // hysteresis, the ray alternates hit/miss and makes the first
+            // focus visibly shake. Release only after genuine mouse movement.
+            if (currentHoveredButton != null &&
+                Vector3.Distance(Input.mousePosition, lastValidHoverMousePosition) < hoverReleaseMouseDistance)
+            {
+                return;
+            }
+
             ClearCurrentHover();
         }
 
         private void LateUpdate()
         {
+            if (isCameraTransitionActive)
+            {
+                UpdateFieldOfView();
+                return;
+            }
+
             // Diterapkan paling akhir di frame ini secara sengaja, supaya
             // menang atas script lain yang mungkin masih menggerakkan
             // kamera (mis. animasi intro CameraRig) di Update() mereka.
@@ -256,6 +284,14 @@ namespace GameJam.Gameplay
             if (enableDelay > 0f)
             {
                 yield return new WaitForSeconds(enableDelay);
+            }
+
+            // CameraMover may need longer than the inspector delay to settle.
+            // Waiting for the real completion avoids two scripts writing the
+            // camera rotation in the same frame during the first hover.
+            while (isCameraTransitionActive)
+            {
+                yield return null;
             }
 
             // FIX: re-capture rotasi default DI SINI (bukan hanya di Awake()).
@@ -373,6 +409,18 @@ namespace GameJam.Gameplay
                 dt * rotationSpeed
             );
 
+            UpdateFieldOfView(dt);
+        }
+
+        private void UpdateFieldOfView()
+        {
+            UpdateFieldOfView(Mathf.Min(Time.deltaTime, MaxMotionDeltaTime));
+        }
+
+        private void UpdateFieldOfView(float dt)
+        {
+            if (targetCamera == null) return;
+
             targetCamera.fieldOfView = Mathf.Lerp(
                 targetCamera.fieldOfView,
                 targetFov,
@@ -418,6 +466,30 @@ namespace GameJam.Gameplay
             {
                 targetRotation = defaultRotation;
             }
+        }
+
+        /// <summary>
+        /// Gives exclusive camera ownership to an external menu transition.
+        /// </summary>
+        public void BeginCameraTransition()
+        {
+            isCameraTransitionActive = true;
+            isRaycastActive = false;
+            isHittingButton = false;
+            isWaitingForMouseMovement = false;
+            ClearCurrentHover(force: true);
+            targetFov = defaultFov;
+        }
+
+        /// <summary>
+        /// Returns camera ownership to hover focus using the final transition pose.
+        /// </summary>
+        public void CompleteCameraTransition(Quaternion finalRotation)
+        {
+            defaultRotation = finalRotation;
+            targetRotation = finalRotation;
+            targetFov = defaultFov;
+            isCameraTransitionActive = false;
         }
     }
 }
