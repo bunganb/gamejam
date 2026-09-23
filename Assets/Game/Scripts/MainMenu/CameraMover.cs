@@ -41,6 +41,7 @@ namespace GameJam.Gameplay
 
         private Vector3 currentBasePosition;
         private Quaternion currentBaseRotation;
+        private Vector3 moveVelocity;
 
         public bool IsMoving => isMoving;
 
@@ -80,16 +81,16 @@ namespace GameJam.Gameplay
             {
                 // 1. Pergerakan Posisi menggunakan SmoothDamp (Pengereman Halus)
                 currentBasePosition = Vector3.SmoothDamp(
-                    currentBasePosition, 
-                    currentTarget.position, 
-                    ref moveVelocity, 
+                    currentBasePosition,
+                    currentTarget.position,
+                    ref moveVelocity,
                     smoothTime
                 );
 
                 // 2. Pergerakan Rotasi menggunakan Slerp
                 currentBaseRotation = Quaternion.Slerp(
-                    currentBaseRotation, 
-                    currentTarget.rotation, 
+                    currentBaseRotation,
+                    currentTarget.rotation,
                     Time.deltaTime * rotateSpeed
                 );
 
@@ -97,34 +98,34 @@ namespace GameJam.Gameplay
                 cameraTransform.position = currentBasePosition;
                 cameraTransform.rotation = currentBaseRotation;
 
-            // 3. Sync ke PrototypeCameraDirector
-            if (cameraDirector != null)
-            {
-                cameraDirector.SetBaseline(cameraTransform.localPosition, cameraTransform.localRotation);
-            }
+                // 4. Sync rotasi acuan ke Raycast3DButtonDetector agar tidak memutar balik kamera
+                if (buttonDetector != null)
+                {
+                    buttonDetector.SetDefaultRotation(currentBaseRotation);
+                }
 
-            // 4. Sync rotasi acuan ke Raycast3DButtonDetector agar tidak memutar balik kamera
-            if (buttonDetector != null)
-            {
-                buttonDetector.SetDefaultRotation(currentBaseRotation);
-            }
-
-            // 5. Hentikan gerakan jika sudah sampai di target
-            if (Vector3.Distance(currentBasePosition, currentTarget.position) < arrivalDistance &&
-                Quaternion.Angle(currentBaseRotation, currentTarget.rotation) < arrivalAngle)
-            {
-                currentBasePosition = currentTarget.position;
-                currentBaseRotation = currentTarget.rotation;
+                // 5. Hentikan gerakan jika sudah sampai di target
+                if (Vector3.Distance(currentBasePosition, currentTarget.position) < arrivalDistance &&
+                    Quaternion.Angle(currentBaseRotation, currentTarget.rotation) < arrivalAngle)
+                {
+                    currentBasePosition = currentTarget.position;
+                    currentBaseRotation = currentTarget.rotation;
 
                     cameraTransform.position = currentBasePosition;
                     cameraTransform.rotation = currentBaseRotation;
 
                     moveVelocity = Vector3.zero; // Reset kecepatan
                     isMoving = false;
+
+                    // Lepas kepemilikan kamera sekarang transisi sudah selesai.
+                    if (buttonDetector != null)
+                    {
+                        buttonDetector.CompleteCameraTransition(currentBaseRotation);
+                    }
                 }
             }
 
-            // 5. Tetap sync baseline setiap frame agar tidak kaget saat pergerakan berhenti
+            // 6. Tetap sync baseline setiap frame agar tidak kaget saat pergerakan berhenti
             SyncExternalComponents();
         }
 
@@ -133,14 +134,6 @@ namespace GameJam.Gameplay
             if (cameraDirector != null)
             {
                 cameraDirector.SetBaseline(cameraTransform.localPosition, cameraTransform.localRotation);
-            }
-
-                if (buttonDetector != null)
-                {
-                    buttonDetector.CompleteCameraTransition(currentBaseRotation);
-                }
-
-                isMoving = false;
             }
         }
 
