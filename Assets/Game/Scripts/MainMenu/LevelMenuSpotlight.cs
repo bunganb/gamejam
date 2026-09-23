@@ -11,17 +11,23 @@ namespace GameJam.Gameplay
         [SerializeField] private Color defaultColor = Color.white; // #FFFFFF
         [SerializeField] private float defaultIntensity = 300f;
 
-        [Header("Hover Settings")]
+        [Header("Hover Settings - Spot Angle")]
         [Tooltip("Sudut sorot saat disipitkan ke arah tombol")]
         [SerializeField] private float hoverSpotAngle = 65f;
 
+        [Header("Hover Settings - Unlocked Level")]
         [Tooltip("Warna lampu untuk level yang terbuka (Unlocked)")]
         [SerializeField] private Color unlockedColor = new Color(0.976f, 1f, 0.322f, 1f); // #F9FF52
 
-        [Tooltip("Warna lampu untuk level yang terkunci (Locked)")]
-        [SerializeField] private Color lockedColor = new Color(0.451f, 0.851f, 1f, 1f); // #73D9FF
+        [Tooltip("Intensitas cahaya saat hover ke level yang terbuka")]
+        [SerializeField] private float unlockedHoverIntensity = 450f;
 
-        [SerializeField] private float hoverIntensity = 450f;
+        [Header("Hover Settings - Locked Level")]
+        [Tooltip("Warna lampu untuk level yang terkunci (Locked)")]
+        [SerializeField] private Color lockedColor = new Color(1f, 0.23f, 0.23f, 1f); // Red / #FF3B3B
+
+        [Tooltip("Intensitas cahaya saat hover ke level yang terkunci (dibuat lebih redup)")]
+        [SerializeField] private float lockedHoverIntensity = 120f;
 
         [Header("Animation Smoothness")]
         [Tooltip("Kecepatan transisi gerakan dan perubahan cahaya")]
@@ -73,8 +79,18 @@ namespace GameJam.Gameplay
                 }
 
                 targetAngle = hoverSpotAngle;
-                targetColor = isCurrentTargetUnlocked ? unlockedColor : lockedColor;
-                targetIntensity = hoverIntensity;
+                
+                // Pisahkan Warna & Intensitas berdasarkan Status Unlocked / Locked
+                if (isCurrentTargetUnlocked)
+                {
+                    targetColor = unlockedColor;
+                    targetIntensity = unlockedHoverIntensity;
+                }
+                else
+                {
+                    targetColor = lockedColor;
+                    targetIntensity = lockedHoverIntensity;
+                }
             }
             else
             {
