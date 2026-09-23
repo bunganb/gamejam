@@ -54,9 +54,9 @@ namespace GameJam.Gameplay
         [Tooltip("Jarak gerak mouse sebelum hover dilepas setelah raycast kehilangan collider karena kamera ikut bergerak")]
         [SerializeField, Min(1f)] private float hoverReleaseMouseDistance = 18f;
 
-        [Header("Spotlight Reference")]
-        [Tooltip("Drag GameObject Spot Light ke sini (bisa berupa GameObject atau komponen LevelMenuSpotlight)")]
-        [SerializeField] private GameObject menuSpotlightObject;
+        [Header("Spotlight Reference List")]
+        [Tooltip("Drag GameObject Spot Light ke sini (bisa lebih dari satu). Index 0 dipakai khusus untuk penanda level locked.")]
+        [SerializeField] private List<GameObject> menuSpotlightObjects = new List<GameObject>();
 
         [Header("Preview / Debug Visualizer")]
         [Tooltip("Aktifkan untuk menampilkan garis raycast di Scene View")]
@@ -64,7 +64,7 @@ namespace GameJam.Gameplay
         [SerializeField] private Color hitColor = Color.green;
         [SerializeField] private Color missColor = Color.red;
 
-        private LevelMenuSpotlight menuSpotlight;
+        private List<LevelMenuSpotlight> menuSpotlights = new List<LevelMenuSpotlight>();
         private LevelButton currentHoveredButton;
 
         // Data rotasi & FOV
@@ -107,23 +107,30 @@ namespace GameJam.Gameplay
             if (targetCamera != null)
             {
                 // Simpan rotasi awal kamera & tetapkan FOV awal.
-                // Catatan: ini masih bisa "basi" kalau kamera direposisikan
-                // oleh sistem lain (CameraRig, level select controller, dll)
-                // setelah Awake() ini berjalan. Nilai ini akan di-refresh lagi
-                // di EnableRaycastRoutine() sebelum raycast benar-benar aktif.
                 defaultRotation = targetCamera.transform.rotation;
                 targetRotation = defaultRotation;
                 targetFov = defaultFov;
                 targetCamera.fieldOfView = defaultFov;
             }
 
-            // Auto fetch komponen LevelMenuSpotlight dari GameObject yang di-assign
-            if (menuSpotlightObject != null)
+            // Auto fetch komponen LevelMenuSpotlight dari seluruh GameObject di List
+            menuSpotlights.Clear();
+            if (menuSpotlightObjects != null)
             {
-                menuSpotlight = menuSpotlightObject.GetComponent<LevelMenuSpotlight>();
-                if (menuSpotlight == null)
+                foreach (var spotObj in menuSpotlightObjects)
                 {
-                    Debug.LogWarning($"[Raycast3DButtonDetector] GameObject '{menuSpotlightObject.name}' tidak memiliki komponen LevelMenuSpotlight!", this);
+                    if (spotObj != null)
+                    {
+                        var spot = spotObj.GetComponent<LevelMenuSpotlight>();
+                        if (spot != null)
+                        {
+                            menuSpotlights.Add(spot);
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[Raycast3DButtonDetector] GameObject '{spotObj.name}' tidak memiliki komponen LevelMenuSpotlight!", this);
+                        }
+                    }
                 }
             }
         }
@@ -139,14 +146,6 @@ namespace GameJam.Gameplay
 
         private void Update()
         {
-            // CATATAN: Update() di sini HANYA menghitung/menentukan target
-            // rotasi & FOV (state), TIDAK menulis ke transform kamera secara
-            // langsung. Penulisan aktual dipindah ke LateUpdate() (lihat di
-            // bawah) supaya script lain yang juga menggerakkan kamera
-            // (misalnya animasi intro/pan CameraRig) sudah selesai jalan
-            // duluan di frame yang sama, sebelum kita menimpa rotasinya.
-            // Ini mencegah dua sistem "rebutan" kontrol atas transform kamera.
-
             // Jika raycast mati atau kamera null, biarkan target kembali ke default & keluar
             if (!isRaycastActive || targetCamera == null)
             {
@@ -189,16 +188,41 @@ namespace GameJam.Gameplay
                         currentHoveredButton = button;
                         currentHoveredButton.SetHovered(true);
 
-                        if (menuSpotlight != null)
+                        if (menuSpotlights.Count > 0)
                         {
                             bool isUnlocked = LevelUnlockProgress.IsUnlocked(button.LevelIndex);
-                            menuSpotlight.FocusOnTarget(focusTarget, isUnlocked);
+
+                            if (isUnlocked)
+                            {
+                                // Jika level terbuka (Unlocked), SEMUA Spotlight di List diarahkan ke target
+                                for (int i = 0; i < menuSpotlights.Count; i++)
+                                {
+                                    if (menuSpotlights[i] != null)
+                                    {
+                                        menuSpotlights[i].FocusOnTarget(focusTarget, true);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Jika level terkunci (Locked), HANYA Index 0 yang menunjuk target locked
+                                if (menuSpotlights[0] != null)
+                                {
+                                    menuSpotlights[0].FocusOnTarget(focusTarget, false);
+                                }
+
+                                // Spotlight sisanya (Index 1 dst) di-reset
+                                for (int i = 1; i < menuSpotlights.Count; i++)
+                                {
+                                    if (menuSpotlights[i] != null)
+                                    {
+                                        menuSpotlights[i].ResetFocus();
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    // Keep an anchor from the latest valid hit. When camera
-                    // focus moves the object away from the cursor by itself,
-                    // a temporary ray miss must not cancel the hover.
                     lastValidHoverMousePosition = Input.mousePosition;
 
                     // B. Atur Target Rotasi & FOV Kamera
@@ -224,9 +248,6 @@ namespace GameJam.Gameplay
             // 3. Jika Raycast Miss (Tidak Kena Tombol)
             isHittingButton = false;
 
-            // Camera rotation/FOV changes screen-space projection. Without
-            // hysteresis, the ray alternates hit/miss and makes the first
-            // focus visibly shake. Release only after genuine mouse movement.
             if (currentHoveredButton != null &&
                 Vector3.Distance(Input.mousePosition, lastValidHoverMousePosition) < hoverReleaseMouseDistance)
             {
@@ -244,9 +265,6 @@ namespace GameJam.Gameplay
                 return;
             }
 
-            // Diterapkan paling akhir di frame ini secara sengaja, supaya
-            // menang atas script lain yang mungkin masih menggerakkan
-            // kamera (mis. animasi intro CameraRig) di Update() mereka.
             UpdateCameraMotion();
         }
 
@@ -286,25 +304,11 @@ namespace GameJam.Gameplay
                 yield return new WaitForSeconds(enableDelay);
             }
 
-            // CameraMover may need longer than the inspector delay to settle.
-            // Waiting for the real completion avoids two scripts writing the
-            // camera rotation in the same frame during the first hover.
             while (isCameraTransitionActive)
             {
                 yield return null;
             }
 
-            // FIX: re-capture rotasi default DI SINI (bukan hanya di Awake()).
-            // Ini memastikan defaultRotation mengikuti posisi kamera yang
-            // sebenarnya saat level select benar-benar mulai aktif, bukan
-            // rotasi kamera saat scene baru load (yang mungkin sudah berubah
-            // karena CameraRig/controller lain memindahkan kamera setelah Awake()).
-            //
-            // PENTING: kalau kamu punya script terpisah yang menganimasikan
-            // kamera masuk ke posisi level-select (intro pan), idealnya
-            // EnableRaycast() dipanggil dari CALLBACK selesainya animasi itu
-            // (bukan cuma delay timer di sini) supaya dua sistem ini tidak
-            // pernah aktif menulis rotasi kamera secara bersamaan.
             if (targetCamera != null)
             {
                 defaultRotation = targetCamera.transform.rotation;
@@ -314,7 +318,6 @@ namespace GameJam.Gameplay
 
             isRaycastActive = true;
 
-            // Kunci deteksi sampai mouse digerakkan
             if (requireMouseMovementOnEnable)
             {
                 isWaitingForMouseMovement = true;
@@ -362,10 +365,6 @@ namespace GameJam.Gameplay
 
             Renderer renderer = target.GetComponentInChildren<Renderer>();
 
-            // FIX: kalau renderer belum pernah "hidup" (misalnya object baru
-            // di-enable/instantiate dan bounds-nya masih kosong/belum valid),
-            // jangan pakai renderer.bounds.center karena bisa mengarah ke titik
-            // yang salah pada frame-frame awal. Fallback ke posisi transform.
             if (renderer != null && renderer.bounds.size != Vector3.zero)
             {
                 return renderer.bounds.center;
@@ -384,9 +383,15 @@ namespace GameJam.Gameplay
                     currentHoveredButton = null;
                 }
 
-                if (menuSpotlight != null)
+                if (menuSpotlights != null && menuSpotlights.Count > 0)
                 {
-                    menuSpotlight.ResetFocus();
+                    for (int i = 0; i < menuSpotlights.Count; i++)
+                    {
+                        if (menuSpotlights[i] != null)
+                        {
+                            menuSpotlights[i].ResetFocus();
+                        }
+                    }
                 }
             }
 
@@ -398,9 +403,6 @@ namespace GameJam.Gameplay
         {
             if (targetCamera == null) return;
 
-            // FIX: clamp deltaTime supaya spike di frame pertama (sisa loading
-            // scene/menu) tidak menyebabkan Slerp/Lerp overshoot yang terlihat
-            // seperti kamera "lompat"/jitter ke arah raycast, bukan ke target.
             float dt = Mathf.Min(Time.deltaTime, MaxMotionDeltaTime);
 
             targetCamera.transform.rotation = Quaternion.Slerp(
